@@ -1,0 +1,8 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" width="64" height="64" role="img" aria-label="US flag cap">
+  <path d="M13 41 C13 27 21.5 17 32 17 C42.5 17 51 27 51 41 Z" fill="#1E3A8A" stroke="#132A47" stroke-width="1.5" stroke-linejoin="round"/>
+  <g fill="#FFFFFF">
+    <circle cx="26" cy="28" r="2"/><circle cx="38" cy="28" r="2"/><circle cx="32" cy="35" r="2"/>
+  </g>
+  <path d="M13 41 L51 41 C56.5 41 61 43 61.5 45.5 C61.9 47.4 60.4 48.8 58 48.9 L13 49.5 Z" fill="#DC2626" stroke="#8F1919" stroke-width="1.5" stroke-linejoin="round"/>
+  <circle cx="32" cy="18.5" r="2.2" fill="#FFFFFF"/>
+</svg>

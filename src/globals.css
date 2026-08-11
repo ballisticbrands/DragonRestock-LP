@@ -1,0 +1,81 @@
+@import url('https://api.fontshare.com/v2/css?f[]=clash-display@200,300,400,500,600,700&f[]=satoshi@300,400,500,700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ──────────────────────────────────────────────────────────────
+   Dragon brand palette — shared with DragonReply / DragonBot.
+   Source of truth: DragonBot-marketing/BRANDING.md
+     green   #2F7D4F (primary) · #98CC65 (primary light)
+     deep    #0F3D2E (footer / serious surfaces)
+     accent  #D63C3C · warm amber #F59E0B / #FF9900 / #F5C451
+     ink     #1A1A1A · page background white
+   Fonts: Clash Display (headings/logo) · Satoshi (body)
+   ────────────────────────────────────────────────────────────── */
+:root {
+  --primary: #2F7D4F;
+  --primary-light: #98CC65;
+  --dark: #0F3D2E;
+  --accent: #D63C3C;
+  --text: #1A1A1A;
+  --white: #FFFFFF;
+}
+
+body {
+  font-family: 'Satoshi', sans-serif;
+  color: var(--text);
+  background: var(--white);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6, .font-clash {
+  font-family: 'Clash Display', sans-serif;
+}
+
+.font-satoshi {
+  font-family: 'Satoshi', sans-serif;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 3px;
+}
+
+/* Smooth scroll */
+html {
+  scroll-behavior: smooth;
+}
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 10%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 10%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 10%;
+    --primary: 147 45% 34%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 147 20% 95%;
+    --secondary-foreground: 147 45% 20%;
+    --muted: 147 10% 96%;
+    --muted-foreground: 0 0% 45%;
+    --accent: 147 20% 95%;
+    --accent-foreground: 147 45% 20%;
+    --destructive: 0 60% 55%;
+    --destructive-foreground: 0 0% 100%;
+    --border: 0 0% 90%;
+    --input: 0 0% 90%;
+    --ring: 147 45% 34%;
+    --radius: 0.5rem;
+  }
+}
