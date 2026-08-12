@@ -7,6 +7,7 @@ import Eyebrow from '../components/landing/Eyebrow';
 import { ease, fadeUp, t } from '../components/landing/theme';
 import { SIGNUP_URL, CONTACT_EMAIL } from '../config';
 import { PLANS, INCLUDED, TRIAL, ANNUAL_DISCOUNT } from '../data/plans';
+import { PRICING_FAQS } from '../data/restockCopy';
 
 /* ──────────────────────────────────────────────────────────────
    /pricing — four tiers priced on orders per month, every feature on
@@ -18,32 +19,7 @@ import { PLANS, INCLUDED, TRIAL, ANNUAL_DISCOUNT } from '../data/plans';
    landing page (#how → /#how).
    ────────────────────────────────────────────────────────────── */
 
-const FAQS = [
-  {
-    q: 'What counts as an order?',
-    a: 'A customer order synced from Seller Central, counted once no matter how many units or line items it contains. Purchase orders you place with suppliers don’t count — only sales.',
-  },
-  {
-    q: 'What happens if I go over my plan?',
-    a: 'Nothing breaks. Orders past your allowance bill at $0.05 each, and we’ll tell you when moving up a tier would work out cheaper. Enterprise has no overage at all.',
-  },
-  {
-    q: 'Are features limited on the cheaper plans?',
-    a: 'No. Forecasting, reconciliation, liquidation, cashflow, the Knowledge Center and MCP access are on every plan including Starter. The tier only sets your order allowance.',
-  },
-  {
-    q: 'Do I need a card to start?',
-    a: 'No. The 30-day trial needs no card. Connect Amazon, let DragonRestock train on your history, and look at a real restock plan before deciding.',
-  },
-  {
-    q: 'Can I change plans later?',
-    a: 'Any time, in both directions. Upgrades take effect immediately and we prorate the difference; downgrades apply at your next billing date.',
-  },
-  {
-    q: 'Do you charge per SKU, user, or marketplace?',
-    a: 'None of them. SKUs, team members, suppliers, warehouses and marketplaces are unlimited on every plan.',
-  },
-];
+const FAQS = PRICING_FAQS;
 
 function PlanCard({ dark, plan, annual }) {
   const perMonth = annual ? Math.round(plan.annual / 12) : plan.monthly;

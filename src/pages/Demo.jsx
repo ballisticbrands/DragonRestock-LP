@@ -20,6 +20,7 @@ import CashflowDemo from '../components/landing/CashflowDemo';
 import LowInventoryFeeDemo from '../components/landing/LowInventoryFeeDemo';
 import { ease, fadeUp, t } from '../components/landing/theme';
 import { SIGNUP_URL } from '../config';
+import { PILLARS_COPY, DIFFERENTIATORS_COPY } from '../data/restockCopy';
 
 /* ──────────────────────────────────────────────────────────────
    /demo — every feature, live, on one page. (/features is an alias.)
@@ -36,79 +37,18 @@ import { SIGNUP_URL } from '../config';
    once, in Depth & control, as a benchmark rather than a swipe.
    ────────────────────────────────────────────────────────────── */
 
-/* ─── 1 · The feature pillars ─── */
-const PILLARS = [
-  {
-    accent: 'green', icon: ListChecks, eyebrow: 'Restock recommendations', id: 'restock',
-    title: 'It tells you what to do. Not what to look at.',
-    body: 'Filters, alerts, and reports are just work in a nicer font — every one of them ends with you still having to decide. DragonRestock does the deciding and hands you the instruction: which SKU, how many units, which supplier, and the date the order has to go out.',
-    bullets: [
-      'An instruction, not an alert — SKU, quantity, supplier, order-by date',
-      'Expand any row for velocity, lead-time legs and the seasonal multiplier',
-      'MOQs, case packs and container fill already respected in the quantity',
-      'Tick a subset and the supplier order reprices to your selection',
-    ],
-    shot: 'Restock recommendations',
-    Component: RestockBoardDemo,
-    wide: true,
-  },
-  {
-    accent: 'orange', icon: TrendingDown, eyebrow: 'Lost sales analysis', id: 'lost-sales',
-    title: 'Every stockout you’ve had, priced.',
-    body: 'DragonRestock reconstructs a year of inventory state per SKU and lays your daily sales over it — red where you were out, amber where you were low. The flat line inside every red band is the money that didn’t happen.',
-    bullets: [
-      'Open a product for its full year of sales against inventory state',
-      'Hover any day for units sold, expected baseline, and what it cost',
-      'Revenue and profit loss both priced, net of referral and FBA fees',
-      'Low-stock days counted too — you don’t have to hit zero to lose sales',
-    ],
-    shot: 'Lost sales analysis',
-    Component: LostSalesDemo,
-    wide: true,
-  },
-  {
-    accent: 'orange', icon: LineChart, eyebrow: 'Forecasting', id: 'forecasting',
-    title: 'A forecast that knows your Q4 isn’t your July.',
-    body: 'Velocity alone is a bad predictor. Prime Day triples your units for 48 hours — most tools read that as demand and have you order against a spike that was never coming back. DragonRestock separates real trend from event lift and forecasts off the baseline that’s actually yours.',
-    bullets: [
-      'Seasonality learned from your own sales history, not a category average',
-      'Prime Day, Big Deal Days, and Black Friday modeled as events — not trend',
-      'Stockout and suppressed-listing days excluded — no forecasting off zeros',
-      'Lightning Deals, coupons, and PPC pushes flagged, not baked in',
-    ],
-    shot: 'Demand forecast with seasonality bands',
-    Component: ForecastDemo,
-    wide: true,
-  },
-  {
-    accent: 'green', icon: Boxes, eyebrow: 'Complete inventory overview', id: 'inventory',
-    title: 'Every PO tracked, every shipment matched back to it.',
-    body: 'Your real coverage isn’t what FBA shows. DragonRestock follows every purchase order from deposit to check-in — grid, board, or calendar — and when a shipment lands at FBA or AWD, it works out which PO it belongs to and tells you what came up short.',
-    bullets: [
-      'Grid, Kanban, and calendar views of every open PO',
-      'AI matches landed shipments back to the PO that shipped them',
-      'Short-received units flagged instead of quietly disappearing',
-      'FBA, AWD, 3PL, and your own warehouses in one number',
-    ],
-    shot: 'Order tracker with AI shipment reconciliation',
-    Component: OrderTrackerDemo,
-    wide: true,
-  },
-  {
-    accent: 'indigo', icon: BookOpen, eyebrow: 'AI Knowledge Center', id: 'knowledge',
-    title: 'The half of your operation that isn’t in any system.',
-    body: 'Lianfa shuts for three weeks around Chinese New Year. The red tee needs a fatter buffer than everything else. Nothing over $10k goes out without Dana in logistics signing it. Right now that lives in your head — tell DragonRestock once and it’s written down, and drop in the spreadsheets you already run on so those land there too.',
-    bullets: [
-      'Say it once — it holds across every chat and every teammate',
-      'Import the spreadsheets your business already runs on',
-      'Your VA’s Claude reads the same entries yours does',
-      'Nothing walks out the door when someone leaves',
-    ],
-    shot: 'AI Knowledge Center',
-    Component: KnowledgeCenterDemo,
-    wide: true,
-  },
-];
+/* ─── 1 · The feature pillars ───
+   Copy lives in the JSX-free data module so the build-time prerender can
+   emit it (src/data/restockCopy.js); this file attaches the icon, accent
+   and live demo component to each entry. Never inline copy here. */
+const PILLAR_META = {
+  restock:      { accent: 'green',  icon: ListChecks,   Component: RestockBoardDemo },
+  'lost-sales': { accent: 'orange', icon: TrendingDown, Component: LostSalesDemo },
+  forecasting:  { accent: 'orange', icon: LineChart,    Component: ForecastDemo },
+  inventory:    { accent: 'green',  icon: Boxes,        Component: OrderTrackerDemo },
+  knowledge:    { accent: 'indigo', icon: BookOpen,     Component: KnowledgeCenterDemo },
+};
+const PILLARS = PILLARS_COPY.map(p => ({ ...p, ...PILLAR_META[p.id], wide: true }));
 
 function PillarText({ dark, pillar }) {
   const { accent, eyebrow, title, body, bullets } = pillar;
@@ -216,6 +156,29 @@ const CASHFLOW_INTEGRATIONS = [
   },
 ];
 
+/* One mark, with its name on hover. The tooltip is ours rather than the
+   browser's `title` — it appears immediately, and a strip of unlabelled
+   logos is exactly where a half-second delay loses the answer. */
+function LogoTile({ dark, src, alt, wide }) {
+  return (
+    <span className={`group relative h-8 ${wide ? 'px-2' : 'w-8'} rounded-lg bg-white flex items-center justify-center shrink-0 border transition-colors ${
+      dark ? 'border-white/15 hover:border-white/35' : 'border-[#1A1A1A]/10 hover:border-[#1A1A1A]/25'
+    }`}>
+      <img src={src} alt={alt} className="max-h-[17px] max-w-[34px] w-auto h-auto object-contain" />
+
+      <span role="tooltip"
+        className={`pointer-events-none absolute bottom-full left-1/2 z-20 mb-2 -translate-x-1/2 translate-y-1 rounded-md px-2 py-1
+          text-[11px] font-semibold leading-none whitespace-nowrap opacity-0 shadow-lg transition-all duration-150
+          group-hover:opacity-100 group-hover:translate-y-0 ${
+            dark ? 'bg-white text-[#1A1A1A] shadow-black/40' : 'bg-[#1A1A1A] text-white shadow-black/20'
+          }`}>
+        {alt}
+        <span className={`absolute top-full left-1/2 -translate-x-1/2 -translate-y-1/2 w-2 h-2 rotate-45 ${dark ? 'bg-white' : 'bg-[#1A1A1A]'}`} />
+      </span>
+    </span>
+  );
+}
+
 function IntegrationStrip({ dark, groups }) {
   return (
     <div className="mb-6 flex flex-wrap items-center gap-x-7 gap-y-4">
@@ -225,12 +188,7 @@ function IntegrationStrip({ dark, groups }) {
           <span className={`text-[9.5px] font-bold uppercase tracking-wide ${dark ? 'text-white/35' : 'text-[#1A1A1A]/35'}`}>{label}</span>
           <span className="flex items-center gap-1.5">
             {logos.map(({ src, alt, wide }) => (
-              <span key={alt} title={alt}
-                className={`h-8 ${wide ? 'px-2' : 'w-8'} rounded-lg bg-white flex items-center justify-center shrink-0 border ${
-                  dark ? 'border-white/15' : 'border-[#1A1A1A]/10'
-                }`}>
-                <img src={src} alt={alt} className="max-h-[17px] max-w-[34px] w-auto h-auto object-contain" />
-              </span>
+              <LogoTile key={alt} dark={dark} src={src} alt={alt} wide={wide} />
             ))}
           </span>
           <span className={`text-[12.5px] ${t.muted(dark)}`}>{note}</span>
@@ -382,16 +340,8 @@ export default function Demo() {
         id="liquidation"
         accent="orange"
         tinted
-        eyebrow="Liquidation"
-        title="Your dead stock is a decision, not an alert."
-        body="Other tools flag a SKU as aging and stop there — a badge, and the decision still sitting with you. But healthy inventory isn’t only about what you buy. DragonRestock recommends what to stop carrying too: which SKUs to discount and to exactly which price tier, which to hold because they’re seasonal rather than dead, and which to clear out — with the monthly profit worked out on every option."
-        bullets={[
-          'A priced decision on every aging SKU, not a warning badge',
-          'Discount tiers tested for real — it finds the price that moves units',
-          'Monthly profit compared across every tier before you commit',
-          'Knows when to hold: seasonal stock isn’t dead stock',
-        ]}
-        shot={{ icon: Recycle, label: 'Liquidation dashboard' }}
+        {...DIFFERENTIATORS_COPY['liquidation']}
+        shot={{ icon: Recycle, label: DIFFERENTIATORS_COPY['liquidation'].shotLabel }}
         Component={LiquidationDemo}
       />
 
@@ -399,18 +349,9 @@ export default function Demo() {
         dark={dark}
         id="cashflow"
         accent="green"
-        eyebrow="Cashflow"
-        title="Know if you can afford the buy before you place it."
-        body="A restock plan you can’t fund isn’t a plan. Drop in a supplier invoice and DragonRestock reads it, works out which PO it belongs to, and lines the deposit and balance up against your Amazon payouts and the cash sitting in Wise and Payoneer — so you see the squeeze before you’re in it."
-        bullets={[
-          'Upload an invoice — it matches itself to the right PO',
-          'Amazon payouts and reimbursements, Wise and Payoneer balances, supplier terms — one timeline',
-          'Deposits and balances tracked against the dates they actually fall due',
-          'Catches timing gaps a monthly total hides completely',
-          'Post the bill straight to Xero or QuickBooks — one click, no double entry',
-        ]}
-        shot={{ icon: Wallet, label: 'Cashflow planner' }}
         integrations={CASHFLOW_INTEGRATIONS}
+        {...DIFFERENTIATORS_COPY['cashflow']}
+        shot={{ icon: Wallet, label: DIFFERENTIATORS_COPY['cashflow'].shotLabel }}
         Component={CashflowDemo}
       />
 
@@ -419,16 +360,8 @@ export default function Demo() {
         id="low-inventory-fee"
         accent="orange"
         tinted
-        eyebrow="Low-inventory fee"
-        title="The fee Amazon never shows you on a line of its own."
-        body="Run a SKU under 28 days of cover and Amazon charges you up to $1.36 a unit for it — folded into the fulfilment fee, itemised nowhere. DragonRestock replays the decision week by week to work out what you’ve already paid, projects the next quarter off your real velocity and your inbound POs, and sizes the send-in that makes it stop."
-        bullets={[
-          'What you were charged, reconstructed — Amazon never itemises it',
-          'Both windows checked, because the fee needs both to be under 28',
-          'Projected forward with your inbound POs and transfers already in it',
-          'Ends in a send-in — quantity, date, and the dollars it saves',
-        ]}
-        shot={{ icon: Timer, label: 'Low-inventory fee forecast' }}
+        {...DIFFERENTIATORS_COPY['low-inventory-fee']}
+        shot={{ icon: Timer, label: DIFFERENTIATORS_COPY['low-inventory-fee'].shotLabel }}
         Component={LowInventoryFeeDemo}
       />
 

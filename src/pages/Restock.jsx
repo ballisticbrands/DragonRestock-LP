@@ -15,6 +15,12 @@ import LostSalesDemo from '../components/landing/LostSalesDemo';
 import RestockBoardDemo from '../components/landing/RestockBoardDemo';
 import { ease, fadeUp, t } from '../components/landing/theme';
 import { SIGNUP_URL, CONTACT_EMAIL } from '../config';
+/* All marketing copy on this page lives in the JSX-free data module so the
+   build-time prerender can emit it — see src/data/restockCopy.js. This file
+   supplies icons, logos and layout; it must not carry new copy of its own. */
+import {
+  PAINS_COPY, SETUP_STEPS_COPY, SETUP_HELP_COPY, ANSWERS_COPY, PLATFORM_COPY,
+} from '../data/restockCopy';
 
 /* ──────────────────────────────────────────────────────────────
    DragonRestock — AI-native inventory & restock planning.
@@ -127,23 +133,8 @@ function Authority({ dark }) {
 }
 
 /* ─── 3 · The problem ─── */
-const PAINS = [
-  {
-    icon: FileSpreadsheet,
-    title: 'A spreadsheet that’s wrong the moment you save it',
-    body: 'Velocity, lead times, in-transit units, restock limits — all hand-maintained across tabs. One stale number and you either stock out or tie up cash in inventory you can’t sell.',
-  },
-  {
-    icon: Ship,
-    title: 'Lead times you can’t see around',
-    body: 'By the time the dashboard says “low”, your supplier still needs 30 days, the boat needs 40, and Amazon needs a week to check it in. The decision was due months ago.',
-  },
-  {
-    icon: BellOff,
-    title: 'Software you’re not on top of',
-    body: 'Owning a tool isn’t the same as running one. Stale lead times, an unreconciled shipment, a supplier nobody chased — the recommendation was fine, the operation around it wasn’t.',
-  },
-];
+const PAIN_ICONS = { spreadsheet: FileSpreadsheet, 'lead-times': Ship, software: BellOff };
+const PAINS = PAINS_COPY.map(p => ({ ...p, icon: PAIN_ICONS[p.key] }));
 
 function Pain({ dark }) {
   const iconWrap = dark ? 'bg-white/[0.06] text-white/70' : 'bg-[#1A1A1A]/[0.04] text-[#1A1A1A]/70';
@@ -212,29 +203,15 @@ function Pain({ dark }) {
    reason sellers don't switch inventory tools. The whole of onboarding
    runs through the MCP connection, so the chat demo below the steps
    *is* the proof — not an illustration of it. */
-const STEPS = [
-  {
-    n: '01',
-    logos: [{ src: '/logo-amazon.png', alt: 'Amazon' }],
-    title: 'Connect Amazon',
-    body: 'One click through Seller Central. DragonRestock pulls your entire sales history, inventory, shipments, and fees — every marketplace, every brand.',
-  },
-  {
-    n: '02',
-    logos: [{ src: '/logo-claude.png', alt: 'Claude' }],
-    title: 'Connect Claude',
-    body: 'DragonRestock runs as an MCP server, so Claude can read and write your inventory directly. From here on you can do everything by asking.',
-  },
-  {
-    n: '03',
-    logos: [
-      { src: '/logos/google-sheets.svg', alt: 'Google Sheets' },
-      { src: '/logos/csv.svg', alt: 'CSV' },
-    ],
-    title: 'Drop in your costs',
-    body: 'Paste a Google Sheet link or upload a CSV — costs, lead times, MOQs, and suppliers. It maps the rows to your SKUs itself. No import wizard, no column mapping, no forms.',
-  },
-];
+const STEP_LOGOS = {
+  amazon: [{ src: '/logo-amazon.png', alt: 'Amazon' }],
+  claude: [{ src: '/logo-claude.png', alt: 'Claude' }],
+  costs: [
+    { src: '/logos/google-sheets.svg', alt: 'Google Sheets' },
+    { src: '/logos/csv.svg', alt: 'CSV' },
+  ],
+};
+const STEPS = SETUP_STEPS_COPY.map(s => ({ ...s, logos: STEP_LOGOS[s.key] }));
 
 /* Logo tiles for the setup steps. Sized to hold both square marks
    (Claude, Sheets) and wide wordmarks (Amazon) without distortion. */
@@ -256,23 +233,8 @@ function StepLogos({ dark, logos }) {
 /* The three ways the ten-minute setup stops being ten minutes. Named
    plainly, because a seller who quietly thinks "mine won't work" won't
    ask — the point of the block is to say the objection out loud first. */
-const SETUP_HELP = [
-  {
-    icon: MessageSquare,
-    title: 'You’ve never used Claude',
-    body: 'Nothing to learn up front. Write to us and we’ll get you set up on it — account, connection, first plan — and you can go back to asking in plain English from there.',
-  },
-  {
-    icon: Puzzle,
-    title: 'Your setup isn’t the standard one',
-    body: 'Several entities, a 3PL nobody integrates with, kits and bundles, costs living in four different sheets. Tell us how you actually run it and we’ll do the mapping with you.',
-  },
-  {
-    icon: FileText,
-    title: 'Your supplier invoices are their own thing',
-    body: 'Per-container pricing, deposits split across POs, tooling and freight folded into a unit cost, a format only your supplier uses. Send us a real one and we’ll get it reading correctly.',
-  },
-];
+const SETUP_HELP_ICONS = { 'new-to-claude': MessageSquare, nonstandard: Puzzle, invoices: FileText };
+const SETUP_HELP = SETUP_HELP_COPY.map(h => ({ ...h, icon: SETUP_HELP_ICONS[h.key] }));
 
 function SetupHelp({ dark }) {
   return (
@@ -362,23 +324,8 @@ function HowItWorks({ dark }) {
    pillar and this section were making the same argument, so the
    order-by date, the quantity, and the lead-time legs now live in
    the cards below instead of in a band of their own. */
-const ANSWERS = [
-  {
-    icon: ListChecks,
-    title: 'An instruction, not an alert',
-    body: '“Order 1,200 units of SHIRT-RED-M from Lianfa today.” A SKU, a quantity, a supplier, and a hard order-by date — not a red badge you have to go interpret.',
-  },
-  {
-    icon: Sparkles,
-    title: 'The reasoning, if you want it',
-    body: 'Every number opens up: velocity, each leg of the lead time — production, freight, and Amazon check-in — and the seasonal multiplier behind it. Auditable when you care, invisible when you don’t.',
-  },
-  {
-    icon: Send,
-    title: 'The next step already taken',
-    body: 'The PO is drafted at the right quantity — MOQs, case packs, and container fill already respected — priced, and checked against your cash. You approve, or you don’t.',
-  },
-];
+const ANSWER_ICONS = { instruction: ListChecks, reasoning: Sparkles, 'next-step': Send };
+const ANSWERS = ANSWERS_COPY.map(a => ({ ...a, icon: ANSWER_ICONS[a.key] }));
 
 /* The platform, in full. Not just the six screens with demos behind
    them — the point of this list is breadth, so a visitor can see how
@@ -386,23 +333,13 @@ const ANSWERS = [
 
    Items that have a live demo carry `href` and get a chip; the rest
    are plain, which keeps the list honest about what's clickable. */
-const PLATFORM = [
-  // everything with a live demo first, in the order /demo presents it
-  { icon: ListChecks, title: 'Restock recommendations', desc: 'Order quantities and order-by dates from velocity, lead time and safety stock. Ranked by urgency.', href: '/demo#restock' },
-  { icon: TrendingDown, title: 'Lost sales analysis', desc: 'Stockout days detected, lost units and revenue priced per SKU. The invisible number, made visible.', href: '/demo#lost-sales' },
-  { icon: LineChart, title: 'Demand forecasting', desc: 'Baseline velocity, seasonal multipliers and inventory-adjusted projections — with events kept out of the baseline.', href: '/demo#forecasting' },
-  { icon: ClipboardList, title: 'Purchase orders', desc: 'Plan in grid, Kanban or calendar. Track every PO from deposit through to check-in.', href: '/demo#inventory' },
-  { icon: PackageCheck, title: 'Shipment reconciliation', desc: 'Landed FBA and AWD shipments matched back to the PO that sent them, with short-receipts flagged.', href: '/demo#inventory' },
-  { icon: BookOpen, title: 'AI Knowledge Center', desc: 'Everything you know about your suppliers and SKUs, written down once and read by every teammate’s Claude.', href: '/demo#knowledge' },
-  { icon: Recycle, title: 'Liquidation & price tiers', desc: 'What to discount and to exactly what price, what to hold, and what to clear — with the profit math on each.', href: '/demo#liquidation' },
-  { icon: Wallet, title: 'Cashflow planner', desc: 'Invoices matched to their PO and run against Amazon payouts and bank balances, so timing gaps surface early.', href: '/demo#cashflow' },
-  { icon: Timer, title: 'Low-inventory fee forecast', desc: 'The per-unit fee Amazon charges under 28 days of cover and never itemises — reconstructed, projected, and priced against the send-in that stops it.', href: '/demo#low-inventory-fee' },
-
-  // and the rest of the platform, which the walkthrough doesn't cover
-  { icon: Boxes, title: 'Inventory tracking', desc: 'FBA, AWD, 3PL and your own warehouses in one view, by SKU, ASIN or parent.' },
-  { icon: Warehouse, title: '3PL manager', desc: 'Off-site stock beside your FBA counts, with send-in plans so it becomes cover instead of sitting there.' },
-  { icon: Building2, title: 'Suppliers', desc: 'Contacts, payment terms, MOQs, case packs — and the lead times each supplier actually delivers on.' },
-];
+const PLATFORM_ICONS = {
+  restock: ListChecks, 'lost-sales': TrendingDown, forecasting: LineChart,
+  'purchase-orders': ClipboardList, reconciliation: PackageCheck, knowledge: BookOpen,
+  liquidation: Recycle, cashflow: Wallet, 'low-inventory-fee': Timer,
+  inventory: Boxes, '3pl': Warehouse, suppliers: Building2,
+};
+const PLATFORM = PLATFORM_COPY.map(p => ({ ...p, icon: PLATFORM_ICONS[p.key] }));
 
 function PlatformList({ dark }) {
   const divider = dark ? 'border-white/[0.07]' : 'border-[#1A1A1A]/[0.07]';
