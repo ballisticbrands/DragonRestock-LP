@@ -3,7 +3,8 @@ import { motion } from 'framer-motion';
 import {
   ArrowRight, ShieldCheck, Sparkles, AlertTriangle, Check, TrendingDown,
   FileSpreadsheet, Ship, BadgeCheck, MessageSquare, ListChecks, Send, BellOff, MousePointerClick,
-  LineChart, Boxes, BookOpen, Recycle, Wallet, SlidersHorizontal,
+  LineChart, Boxes, BookOpen, Recycle, Wallet, ClipboardList, PackageCheck,
+  Warehouse, Building2, Timer, Mail, Puzzle, FileText,
 } from 'lucide-react';
 import Nav from '../components/landing/Nav';
 import SiteFooter from '../components/landing/SiteFooter';
@@ -13,7 +14,7 @@ import MCPChatDemo from '../components/landing/MCPChatDemo';
 import LostSalesDemo from '../components/landing/LostSalesDemo';
 import RestockBoardDemo from '../components/landing/RestockBoardDemo';
 import { ease, fadeUp, t } from '../components/landing/theme';
-import { SIGNUP_URL } from '../config';
+import { SIGNUP_URL, CONTACT_EMAIL } from '../config';
 
 /* ──────────────────────────────────────────────────────────────
    DragonRestock — AI-native inventory & restock planning.
@@ -176,7 +177,7 @@ function Pain({ dark }) {
             DragonRestock reconstructs every stockout in your history and puts a price on it — the units you couldn’t
             sell, the days you were dark, and what each one cost you.
           </p>
-          <LostSalesDemo />
+          <LostSalesDemo interactive={false} />
         </motion.div>
 
         {/* The stakes. Theme-independent by design: reproduces the exact rendered
@@ -252,13 +253,78 @@ function StepLogos({ dark, logos }) {
   );
 }
 
+/* The three ways the ten-minute setup stops being ten minutes. Named
+   plainly, because a seller who quietly thinks "mine won't work" won't
+   ask — the point of the block is to say the objection out loud first. */
+const SETUP_HELP = [
+  {
+    icon: MessageSquare,
+    title: 'You’ve never used Claude',
+    body: 'Nothing to learn up front. Write to us and we’ll get you set up on it — account, connection, first plan — and you can go back to asking in plain English from there.',
+  },
+  {
+    icon: Puzzle,
+    title: 'Your setup isn’t the standard one',
+    body: 'Several entities, a 3PL nobody integrates with, kits and bundles, costs living in four different sheets. Tell us how you actually run it and we’ll do the mapping with you.',
+  },
+  {
+    icon: FileText,
+    title: 'Your supplier invoices are their own thing',
+    body: 'Per-container pricing, deposits split across POs, tooling and freight folded into a unit cost, a format only your supplier uses. Send us a real one and we’ll get it reading correctly.',
+  },
+];
+
+function SetupHelp({ dark }) {
+  return (
+    <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.1, ease }}
+      className={`mt-16 rounded-2xl p-8 sm:p-10 ${t.card(dark)}`}>
+      <div className="grid lg:grid-cols-[minmax(0,0.85fr)_minmax(0,1.15fr)] gap-10 lg:gap-14">
+        <div>
+          <h3 className={`font-clash font-semibold text-2xl sm:text-[30px] leading-tight tracking-[-0.02em] mb-4 ${t.heading(dark)}`}>
+            And if any of it doesn’t fit you — just write to us.
+          </h3>
+          <p className={`text-[15.5px] leading-[1.65] mb-5 ${t.muted(dark)}`}>
+            Ten minutes is the normal case. If yours isn’t the normal case, that’s a conversation, not a dead end —
+            a real person reads it and we’ll try to make it work for your business. And in the unlikely case that
+            we can’t, we’ll tell you straight away, before you’ve moved anything across.
+          </p>
+          <a href={`mailto:${CONTACT_EMAIL}?subject=Setting%20up%20DragonRestock`}
+            className={`inline-flex items-center gap-2.5 px-6 py-3.5 rounded-lg text-[15px] font-semibold tracking-wide border-2 transition-all hover:-translate-y-0.5 ${
+              dark
+                ? 'border-[#98CC65]/50 text-[#98CC65] hover:bg-[#98CC65]/10'
+                : 'border-[#2F7D4F]/35 text-[#2F7D4F] hover:bg-[#2F7D4F]/[0.06] hover:border-[#2F7D4F]/60'
+            }`}>
+            <Mail className="w-[18px] h-[18px]" /> {CONTACT_EMAIL}
+          </a>
+        </div>
+
+        <div className={`grid gap-px rounded-xl overflow-hidden ${dark ? 'bg-white/[0.07]' : 'bg-[#1A1A1A]/[0.07]'}`}>
+          {SETUP_HELP.map(({ icon: Icon, title, body }) => (
+            <div key={title} className={`flex items-start gap-3.5 p-5 sm:p-6 ${dark ? 'bg-[#141618]' : 'bg-[#fafafa]'}`}>
+              <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 ${
+                dark ? 'bg-[#98CC65]/12 text-[#98CC65]' : 'bg-[#2F7D4F]/10 text-[#2F7D4F]'
+              }`}>
+                <Icon className="w-[18px] h-[18px]" />
+              </span>
+              <div className="min-w-0">
+                <h4 className={`font-semibold text-[15.5px] mb-1 ${t.heading(dark)}`}>{title}</h4>
+                <p className={`text-[13.5px] leading-[1.55] ${t.muted(dark)}`}>{body}</p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </motion.div>
+  );
+}
+
 function HowItWorks({ dark }) {
   return (
     <section id="how" className={`py-24 scroll-mt-24 border-y ${dark ? 'bg-[#141618] border-white/5' : 'bg-[#fafafa] border-[#1A1A1A]/5'}`}>
       <div className="max-w-6xl mx-auto px-6">
         <SectionHead dark={dark} className="mb-14" eyebrow="Setup"
           title="Set up with Claude in 10 minutes."
-          sub="No implementation call, no import project. You talk to Claude and DragonRestock does the wiring — and if you’d rather we did it, a real person is ready to onboard you the minute you sign up." />
+          sub="No implementation call, no import project. You talk to Claude and DragonRestock does the wiring — and if you’d rather we did it, a real person is ready to onboard you the minute you sign up. Never used Claude? That’s fine, and it’s covered below." />
 
         <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.1, ease }}
           className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-16">
@@ -283,6 +349,8 @@ function HowItWorks({ dark }) {
           </p>
           <MCPChatDemo dark={dark} />
         </motion.div>
+
+        <SetupHelp dark={dark} />
       </div>
     </section>
   );
@@ -312,34 +380,61 @@ const ANSWERS = [
   },
 ];
 
-/* Short teasers for everything that moved to /demo — title, one line,
-   and a deep link into that section of the demo. */
-const MORE = [
-  { icon: LineChart, title: 'Forecasting', desc: 'Seasonality and Q4 lift learned from your own history, with Prime Day kept out of the baseline.', href: '/demo#forecasting' },
-  { icon: Boxes, title: 'Complete inventory overview', desc: 'Every PO tracked from deposit to check-in, and landed shipments matched back to the order that shipped them.', href: '/demo#inventory' },
-  { icon: BookOpen, title: 'AI Knowledge Center', desc: 'What you know about your suppliers, written down once and read by every teammate’s Claude.', href: '/demo#knowledge' },
-  { icon: Recycle, title: 'Liquidation', desc: 'What to discount and to what price, what to hold, and what to clear — with the monthly profit on each option.', href: '/demo#liquidation' },
-  { icon: Wallet, title: 'Cashflow planner', desc: 'Invoices matched to their PO and run against your Amazon payouts, so timing gaps surface early.', href: '/demo#cashflow' },
-  { icon: SlidersHorizontal, title: 'Depth & control', desc: 'Buffer stock, min/max, velocity windows, supplier terms — every knob a mature planner gives you.', href: '/demo#depth' },
+/* The platform, in full. Not just the six screens with demos behind
+   them — the point of this list is breadth, so a visitor can see how
+   much system is here before deciding whether to click into it.
+
+   Items that have a live demo carry `href` and get a chip; the rest
+   are plain, which keeps the list honest about what's clickable. */
+const PLATFORM = [
+  // everything with a live demo first, in the order /demo presents it
+  { icon: ListChecks, title: 'Restock recommendations', desc: 'Order quantities and order-by dates from velocity, lead time and safety stock. Ranked by urgency.', href: '/demo#restock' },
+  { icon: TrendingDown, title: 'Lost sales analysis', desc: 'Stockout days detected, lost units and revenue priced per SKU. The invisible number, made visible.', href: '/demo#lost-sales' },
+  { icon: LineChart, title: 'Demand forecasting', desc: 'Baseline velocity, seasonal multipliers and inventory-adjusted projections — with events kept out of the baseline.', href: '/demo#forecasting' },
+  { icon: ClipboardList, title: 'Purchase orders', desc: 'Plan in grid, Kanban or calendar. Track every PO from deposit through to check-in.', href: '/demo#inventory' },
+  { icon: PackageCheck, title: 'Shipment reconciliation', desc: 'Landed FBA and AWD shipments matched back to the PO that sent them, with short-receipts flagged.', href: '/demo#inventory' },
+  { icon: BookOpen, title: 'AI Knowledge Center', desc: 'Everything you know about your suppliers and SKUs, written down once and read by every teammate’s Claude.', href: '/demo#knowledge' },
+  { icon: Recycle, title: 'Liquidation & price tiers', desc: 'What to discount and to exactly what price, what to hold, and what to clear — with the profit math on each.', href: '/demo#liquidation' },
+  { icon: Wallet, title: 'Cashflow planner', desc: 'Invoices matched to their PO and run against Amazon payouts and bank balances, so timing gaps surface early.', href: '/demo#cashflow' },
+  { icon: Timer, title: 'Low-inventory fee forecast', desc: 'The per-unit fee Amazon charges under 28 days of cover and never itemises — reconstructed, projected, and priced against the send-in that stops it.', href: '/demo#low-inventory-fee' },
+
+  // and the rest of the platform, which the walkthrough doesn't cover
+  { icon: Boxes, title: 'Inventory tracking', desc: 'FBA, AWD, 3PL and your own warehouses in one view, by SKU, ASIN or parent.' },
+  { icon: Warehouse, title: '3PL manager', desc: 'Off-site stock beside your FBA counts, with send-in plans so it becomes cover instead of sitting there.' },
+  { icon: Building2, title: 'Suppliers', desc: 'Contacts, payment terms, MOQs, case packs — and the lead times each supplier actually delivers on.' },
 ];
 
-function MoreCards({ dark }) {
+function PlatformList({ dark }) {
+  const divider = dark ? 'border-white/[0.07]' : 'border-[#1A1A1A]/[0.07]';
   return (
-    <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.12, ease }}
-      className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-      {MORE.map(({ icon: Icon, title, desc, href }) => (
-        <a key={title} href={href}
-          className={`${t.card(dark)} rounded-2xl p-5 group transition-colors ${dark ? 'hover:bg-white/[0.06]' : 'hover:border-[#2F7D4F]/30'}`}>
-          <div className="flex items-center gap-2.5 mb-2">
-            <span className={`w-8 h-8 rounded-lg flex items-center justify-center shrink-0 ${dark ? 'bg-[#98CC65]/12 text-[#98CC65]' : 'bg-[#2F7D4F]/10 text-[#2F7D4F]'}`}>
-              <Icon className="w-[17px] h-[17px]" />
+    <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.1, ease }}
+      className="grid md:grid-cols-2 gap-x-12">
+      {PLATFORM.map(({ icon: Icon, title, desc, href }) => {
+        const Tag = href ? 'a' : 'div';
+        return (
+          <Tag key={title} href={href}
+            className={`group flex items-start gap-3.5 py-5 border-b ${divider} ${href ? 'cursor-pointer' : ''}`}>
+            <span className={`w-9 h-9 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition-colors ${
+              dark ? 'bg-white/[0.06] text-white/60' : 'bg-[#1A1A1A]/[0.04] text-[#1A1A1A]/55'
+            } ${href ? (dark ? 'group-hover:bg-[#98CC65]/15 group-hover:text-[#98CC65]' : 'group-hover:bg-[#2F7D4F]/10 group-hover:text-[#2F7D4F]') : ''}`}>
+              <Icon className="w-[18px] h-[18px]" />
             </span>
-            <h3 className={`font-semibold text-[15px] ${t.heading(dark)}`}>{title}</h3>
-            <ArrowRight className={`w-3.5 h-3.5 ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity ${t.green(dark)}`} />
-          </div>
-          <p className={`text-[13.5px] leading-snug ${t.muted(dark)}`}>{desc}</p>
-        </a>
-      ))}
+            <span className="min-w-0">
+              <span className="flex flex-wrap items-center gap-x-2 gap-y-1 mb-1">
+                <span className={`font-semibold text-[15.5px] ${t.heading(dark)}`}>{title}</span>
+                {href && (
+                  <span className={`inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-bold uppercase tracking-wide transition-colors ${
+                    dark ? 'bg-[#98CC65]/15 text-[#98CC65]' : 'bg-[#2F7D4F]/10 text-[#2F7D4F]'
+                  }`}>
+                    Demo <ArrowRight className="w-2.5 h-2.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </span>
+                )}
+              </span>
+              <span className={`block text-[13.5px] leading-[1.55] ${t.muted(dark)}`}>{desc}</span>
+            </span>
+          </Tag>
+        );
+      })}
     </motion.div>
   );
 }
@@ -387,11 +482,11 @@ function DemoTeaser({ dark }) {
   return (
     <section className={`py-20 border-y ${dark ? 'bg-[#141618] border-white/5' : 'bg-[#fafafa] border-[#1A1A1A]/5'}`}>
       <div className="max-w-6xl mx-auto px-6">
-        <SectionHead dark={dark} className="mb-12" eyebrow="Everything else"
-          title="That’s one screen. Here’s the rest."
-          sub="Forecasting, order tracking, liquidation, cashflow — and every one of them is clickable before you sign up for anything." />
+        <SectionHead dark={dark} className="mb-10" eyebrow="The platform"
+          title="Everything running underneath the recommendation."
+          sub="That daily action list is one screen. It works because of everything sitting behind it — and the ones marked Demo you can click straight into." />
 
-        <MoreCards dark={dark} />
+        <PlatformList dark={dark} />
 
         <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.15, ease }} className="mt-14 text-center">
           <a href="/demo"

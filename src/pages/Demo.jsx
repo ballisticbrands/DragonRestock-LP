@@ -3,7 +3,7 @@ import { motion } from 'framer-motion';
 import {
   ArrowRight, ShieldCheck, Check, TrendingDown, Boxes, LineChart, Globe, Layers,
   Wallet, Recycle, SlidersHorizontal, Users, Percent, BookOpen, ListChecks,
-  Building2, Gauge, ArrowLeftRight, Container,
+  Building2, Gauge, ArrowLeftRight, Container, Timer,
 } from 'lucide-react';
 import Nav from '../components/landing/Nav';
 import SiteFooter from '../components/landing/SiteFooter';
@@ -11,11 +11,13 @@ import Eyebrow from '../components/landing/Eyebrow';
 import SectionHead from '../components/landing/SectionHead';
 import ScreenshotSlot from '../components/landing/ScreenshotSlot';
 import RestockBoardDemo from '../components/landing/RestockBoardDemo';
+import LostSalesDemo from '../components/landing/LostSalesDemo';
 import ForecastDemo from '../components/landing/ForecastDemo';
 import OrderTrackerDemo from '../components/landing/OrderTrackerDemo';
 import KnowledgeCenterDemo from '../components/landing/KnowledgeCenterDemo';
 import LiquidationDemo from '../components/landing/LiquidationDemo';
 import CashflowDemo from '../components/landing/CashflowDemo';
+import LowInventoryFeeDemo from '../components/landing/LowInventoryFeeDemo';
 import { ease, fadeUp, t } from '../components/landing/theme';
 import { SIGNUP_URL } from '../config';
 
@@ -48,6 +50,20 @@ const PILLARS = [
     ],
     shot: 'Restock recommendations',
     Component: RestockBoardDemo,
+    wide: true,
+  },
+  {
+    accent: 'orange', icon: TrendingDown, eyebrow: 'Lost sales analysis', id: 'lost-sales',
+    title: 'Every stockout you’ve had, priced.',
+    body: 'DragonRestock reconstructs a year of inventory state per SKU and lays your daily sales over it — red where you were out, amber where you were low. The flat line inside every red band is the money that didn’t happen.',
+    bullets: [
+      'Open a product for its full year of sales against inventory state',
+      'Hover any day for units sold, expected baseline, and what it cost',
+      'Revenue and profit loss both priced, net of referral and FBA fees',
+      'Low-stock days counted too — you don’t have to hit zero to lose sales',
+    ],
+    shot: 'Lost sales analysis',
+    Component: LostSalesDemo,
     wide: true,
   },
   {
@@ -258,7 +274,7 @@ function ClosingCTA() {
         <div className="absolute -bottom-20 -right-10 w-80 h-80 bg-[#FF9900]/15 rounded-full blur-3xl pointer-events-none" />
         <div className="relative z-10">
           <h2 className="font-clash font-semibold text-white text-3xl sm:text-4xl lg:text-[46px] leading-tight tracking-[-0.02em] max-w-2xl mx-auto">
-            Every one of these runs on your own numbers in ten minutes.
+            Every one of these runs on your own numbers in 10 minutes.
           </h2>
           <p className="mt-5 text-[16px] sm:text-[18px] text-white/80 max-w-xl mx-auto leading-[1.6]">
             Connect Amazon and see all of it against your real catalogue. Free to start, no card required.
@@ -314,7 +330,7 @@ export default function Demo() {
         tinted
         eyebrow="Liquidation"
         title="Your dead stock is a decision, not an alert."
-        body="Other tools flag a SKU as aging and stop there — a badge, and the decision still sitting with you. But healthy inventory isn’t only about what you buy. DragonRestock recommends what to stop carrying too: which SKUs to discount and to exactly what price, which to hold because they’re seasonal rather than dead, and which to clear out — with the monthly profit worked out on every option."
+        body="Other tools flag a SKU as aging and stop there — a badge, and the decision still sitting with you. But healthy inventory isn’t only about what you buy. DragonRestock recommends what to stop carrying too: which SKUs to discount and to exactly which price tier, which to hold because they’re seasonal rather than dead, and which to clear out — with the monthly profit worked out on every option."
         bullets={[
           'A priced decision on every aging SKU, not a warning badge',
           'Discount tiers tested for real — it finds the price that moves units',
@@ -340,6 +356,24 @@ export default function Demo() {
         ]}
         shot={{ icon: Wallet, label: 'Cashflow planner' }}
         Component={CashflowDemo}
+      />
+
+      <Differentiator
+        dark={dark}
+        id="low-inventory-fee"
+        accent="orange"
+        tinted
+        eyebrow="Low-inventory fee"
+        title="The fee Amazon never shows you on a line of its own."
+        body="Run a SKU under 28 days of cover and Amazon charges you up to $1.36 a unit for it — folded into the fulfilment fee, itemised nowhere. DragonRestock replays the decision week by week to work out what you’ve already paid, projects the next quarter off your real velocity and your inbound POs, and sizes the send-in that makes it stop."
+        bullets={[
+          'What you were charged, reconstructed — Amazon never itemises it',
+          'Both windows checked, because the fee needs both to be under 28',
+          'Projected forward with your inbound POs and transfers already in it',
+          'Ends in a send-in — quantity, date, and the dollars it saves',
+        ]}
+        shot={{ icon: Timer, label: 'Low-inventory fee forecast' }}
+        Component={LowInventoryFeeDemo}
       />
 
       <Depth dark={dark} />
