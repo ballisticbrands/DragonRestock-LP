@@ -8,7 +8,24 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DragonRestock — Never run out of stock again</title>
     <meta name="description" content="DragonRestock tracks your Amazon sales velocity and lead times, and tells you exactly when to reorder every SKU — so you never stock out." />
-    <!-- Add DragonRestock's own tracking IDs (Pixel / Clarity / GA) here before launch. -->
+    <!-- Google Analytics — GA4 property "DragonRestock" (Ballistic Brands account).
+         ⚠️ gtag MUST push the `arguments` object, not a rest-param array: a
+         dataLayer.push(args) with an array is silently ignored by gtag.js and
+         the property receives ZERO hits, not even page_view. This is the
+         standard snippet; leave it exactly as Google emits it.
+         Client-side route changes are reported separately — see
+         trackRouteChange() in src/lib/track.js, since gtag('config') only
+         fires a pageview on hard load. -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-7JMJEMLRZD"></script>
+    <script>
+      window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', 'G-7JMJEMLRZD');
+    </script>
+    <!-- TODO before paid traffic: Microsoft Clarity project ID + Meta pixel ID.
+         Both are no-ops until added — track() guards on typeof window.clarity /
+         window.fbq, so events silently vanish rather than erroring. -->
   </head>
   <body>
     <div id="root"></div>
