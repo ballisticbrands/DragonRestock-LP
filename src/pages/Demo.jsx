@@ -187,7 +187,60 @@ function Pillars({ dark }) {
    Full-bleed sections for the two features nothing else in the
    category ships. Both wait on real screenshots — drop the file in
    /public/shots and set `src` on the ScreenshotSlot below. */
-function Differentiator({ dark, id, accent, eyebrow, title, body, bullets, shot, src, tinted, Component }) {
+/* The connected stack for a band, as marks rather than prose — the
+   fastest way to answer "does it plug into what I already use?". Sits
+   between the bullets and the demo panel, so it reads as a fact about
+   the product rather than a row inside the screenshot.
+
+   Tiles stay white in both themes: these are full-colour brand marks
+   (Amazon's is a dark wordmark) and they only read cleanly on white.
+   Placeholder marks live in /public/logos — swap in the official
+   assets at the same filenames. */
+const CASHFLOW_INTEGRATIONS = [
+  {
+    label: 'Reads',
+    note: 'Amazon payouts & reimbursements · Wise and Payoneer balances',
+    logos: [
+      { src: '/logo-amazon.png', alt: 'Amazon', wide: true },
+      { src: '/logos/wise.svg', alt: 'Wise' },
+      { src: '/logos/payoneer.svg', alt: 'Payoneer' },
+    ],
+  },
+  {
+    label: 'Writes',
+    note: 'Every invoice posted to your books',
+    logos: [
+      { src: '/logos/xero.svg', alt: 'Xero' },
+      { src: '/logos/quickbooks.svg', alt: 'QuickBooks' },
+    ],
+  },
+];
+
+function IntegrationStrip({ dark, groups }) {
+  return (
+    <div className="mb-6 flex flex-wrap items-center gap-x-7 gap-y-4">
+      {groups.map(({ label, note, logos }, i) => (
+        <div key={label} className="flex items-center gap-2.5">
+          {i > 0 && <span className={`hidden lg:block w-px h-7 mr-4 ${dark ? 'bg-white/10' : 'bg-[#1A1A1A]/10'}`} />}
+          <span className={`text-[9.5px] font-bold uppercase tracking-wide ${dark ? 'text-white/35' : 'text-[#1A1A1A]/35'}`}>{label}</span>
+          <span className="flex items-center gap-1.5">
+            {logos.map(({ src, alt, wide }) => (
+              <span key={alt} title={alt}
+                className={`h-8 ${wide ? 'px-2' : 'w-8'} rounded-lg bg-white flex items-center justify-center shrink-0 border ${
+                  dark ? 'border-white/15' : 'border-[#1A1A1A]/10'
+                }`}>
+                <img src={src} alt={alt} className="max-h-[17px] max-w-[34px] w-auto h-auto object-contain" />
+              </span>
+            ))}
+          </span>
+          <span className={`text-[12.5px] ${t.muted(dark)}`}>{note}</span>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function Differentiator({ dark, id, accent, eyebrow, title, body, bullets, shot, src, tinted, Component, integrations }) {
   const accentText = accent === 'orange' ? 'text-[#F59E0B]' : t.green(dark);
   const bg = tinted
     ? (dark ? 'bg-[#141618] border-y border-white/5' : 'bg-[#fafafa] border-y border-[#1A1A1A]/5')
@@ -210,6 +263,7 @@ function Differentiator({ dark, id, accent, eyebrow, title, body, bullets, shot,
         </motion.div>
 
         <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.1, ease }}>
+          {integrations && <IntegrationStrip dark={dark} groups={integrations} />}
           {Component
             ? <Component dark={dark} />
             : <ScreenshotSlot dark={dark} accent={accent} icon={shot.icon} label={shot.label} src={src} alt={shot.label} ratio="16 / 10" />}
@@ -347,14 +401,16 @@ export default function Demo() {
         accent="green"
         eyebrow="Cashflow"
         title="Know if you can afford the buy before you place it."
-        body="A restock plan you can’t fund isn’t a plan. Drop in a supplier invoice and DragonRestock reads it, works out which PO it belongs to, and lines the deposit and balance up against your Amazon payouts and your Wise balance — so you see the squeeze before you’re in it."
+        body="A restock plan you can’t fund isn’t a plan. Drop in a supplier invoice and DragonRestock reads it, works out which PO it belongs to, and lines the deposit and balance up against your Amazon payouts and the cash sitting in Wise and Payoneer — so you see the squeeze before you’re in it."
         bullets={[
           'Upload an invoice — it matches itself to the right PO',
-          'Amazon payouts, Wise balances, and supplier terms on one timeline',
+          'Amazon payouts and reimbursements, Wise and Payoneer balances, supplier terms — one timeline',
           'Deposits and balances tracked against the dates they actually fall due',
           'Catches timing gaps a monthly total hides completely',
+          'Post the bill straight to Xero or QuickBooks — one click, no double entry',
         ]}
         shot={{ icon: Wallet, label: 'Cashflow planner' }}
+        integrations={CASHFLOW_INTEGRATIONS}
         Component={CashflowDemo}
       />
 

@@ -516,7 +516,7 @@ function ClosingCTA() {
             Know what to order, when, and whether you can afford it.
           </h2>
           <p className="mt-5 text-[16px] sm:text-[18px] text-white/80 max-w-xl mx-auto leading-[1.6]">
-            Connect Amazon and DragonRestock builds your first restock plan in ten minutes.
+            Connect Amazon and DragonRestock builds your first restock plan in 10 minutes.
             Free to start, no card required.
           </p>
           <div className="mt-9 flex flex-col sm:flex-row items-center justify-center gap-3">

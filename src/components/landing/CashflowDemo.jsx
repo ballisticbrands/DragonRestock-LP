@@ -17,8 +17,14 @@ import { C, ease } from './theme';
      3. REPORT    with the invoice linked, the cashflow report runs
 
    The report is modelled on the seller's own cash-flow skill output:
-   due-now vs not-yet-due, Amazon settlements, Wise cash on hand, a
-   net 30-day position, and a heads-up section.
+   due-now vs not-yet-due, Amazon settlements and reimbursements, cash
+   on hand across Wise and Payoneer, a net 30-day position, and a
+   heads-up section.
+
+   The ledger's last column closes the loop the other way: once an
+   invoice is linked it can be posted to Xero or QuickBooks, so the
+   seller isn't keying the same bill in twice. That's the second real
+   click in the panel.
 
    The heads-up is the part that earns the feature. The 30-day net
    position is positive — but the Lianfa deposit falls due a week
@@ -30,16 +36,19 @@ import { C, ease } from './theme';
 const money = (n) => `$${n.toLocaleString(undefined, { maximumFractionDigits: 0 })}`;
 
 const INVOICES = [
-  { inv: 'LF-2026-089', supplier: 'Lianfa Textiles', po: 'SHIRT#189', type: 'Production', deposit: 351, balance: 819, dep: 'Y', bal: 'Y', due: 'Jul 4' },
-  { inv: 'DF-2026-041', supplier: 'Dongfeng Headwear', po: 'HAT#20', type: 'Production', deposit: 336, balance: 784, dep: 'Y', bal: 'Y', due: 'Jun 18' },
-  { inv: 'TX-2060', supplier: 'Talex Freight', po: null, type: 'Shipping', deposit: 0, balance: 2840, dep: '—', bal: 'N', due: 'Aug 5', overdue: true },
-  { inv: 'DF-2026-047', supplier: 'Dongfeng Headwear', po: 'HAT#21', type: 'Production', deposit: 538, balance: 1254, dep: 'Y', bal: 'N', due: 'Aug 22' },
-  { inv: 'LF-2026-094', supplier: 'Lianfa Textiles', po: 'SHIRT#190', type: 'Production', deposit: 1404, balance: 3276, dep: 'Y', bal: 'P', due: 'Sep 2' },
+  { inv: 'LF-2026-089', supplier: 'Lianfa Textiles', po: 'SHIRT#189', type: 'Production', deposit: 351, balance: 819, dep: 'Y', bal: 'Y', due: 'Jul 4', synced: true },
+  { inv: 'DF-2026-041', supplier: 'Dongfeng Headwear', po: 'HAT#20', type: 'Production', deposit: 336, balance: 784, dep: 'Y', bal: 'Y', due: 'Jun 18', synced: true },
+  { inv: 'TX-2060', supplier: 'Talex Freight', po: null, type: 'Shipping', deposit: 0, balance: 2840, dep: '—', bal: 'N', due: 'Aug 5', overdue: true, synced: false },
+  { inv: 'DF-2026-047', supplier: 'Dongfeng Headwear', po: 'HAT#21', type: 'Production', deposit: 538, balance: 1254, dep: 'Y', bal: 'N', due: 'Aug 22', synced: true },
+  { inv: 'LF-2026-094', supplier: 'Lianfa Textiles', po: 'SHIRT#190', type: 'Production', deposit: 1404, balance: 3276, dep: 'Y', bal: 'P', due: 'Sep 2', synced: true },
 ];
+
+/* The connected stack is shown as a logo strip above this panel, on the
+   page itself — see INTEGRATIONS in pages/Demo.jsx. */
 
 const NEW_INVOICE = {
   inv: 'LF-2026-101', supplier: 'Lianfa Textiles', po: 'SHIRT#191', type: 'Production',
-  deposit: 1989, balance: 4641, dep: 'N', bal: 'N', due: 'Aug 18', isNew: true,
+  deposit: 1989, balance: 4641, dep: 'N', bal: 'N', due: 'Aug 18', isNew: true, synced: false,
 };
 
 const DUE_30 = [
@@ -57,6 +66,7 @@ const LATER_TOTAL = LATER.reduce((n, d) => n + d.amount, 0);     // 6,881
 
 const CASH = 3120;
 const PAYOUT = 8420;
+const REIMB = 412;          // already inside the payout above, shown separately
 const PAYOUT_DATE = 'Aug 25';
 const NET = CASH - DUE_TOTAL + PAYOUT;                            // +5,301
 /* The squeeze: everything falling due before the payout lands. */
@@ -65,7 +75,7 @@ const GAP = CASH - BEFORE_PAYOUT;                                 // −(shortfa
 
 const PAID = { Y: { text: 'Y', color: C.green, bg: 'rgba(47,125,79,0.12)' }, P: { text: 'P', color: '#B45309', bg: 'rgba(245,158,11,0.20)' }, N: { text: 'N', color: C.red, bg: 'rgba(220,38,38,0.10)' }, '—': { text: '–', color: 'rgba(26,26,26,0.30)', bg: 'transparent' } };
 
-const GRID = 'grid grid-cols-[100px_minmax(120px,1fr)_78px_72px_72px_58px_58px_62px] items-center gap-2';
+const GRID = 'grid grid-cols-[100px_minmax(120px,1fr)_78px_72px_72px_58px_58px_62px_96px] items-center gap-2';
 
 function Flag({ v }) {
   const p = PAID[v];
@@ -77,7 +87,49 @@ function Flag({ v }) {
   );
 }
 
-function InvoiceRow({ r }) {
+/* The sync cell. Every row but the new one is settled either way; the
+   new one carries the button, which is the second click in the demo. */
+function SyncCell({ r, state, onSend }) {
+  if (!r.isNew) {
+    return r.synced ? (
+      <span className="flex items-center justify-center gap-1" title="Synced to Xero">
+        <Check className="w-3 h-3 shrink-0" style={{ color: C.green }} />
+        <img src="/logos/xero.svg" alt="Xero" className="w-3 h-3 opacity-80" />
+      </span>
+    ) : (
+      <span className="flex justify-center text-[9.5px] text-[#1A1A1A]/25">Not synced</span>
+    );
+  }
+
+  if (state === 'sent') {
+    return (
+      <motion.span initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} transition={{ duration: 0.2 }}
+        className="flex items-center justify-center gap-1 text-[9px] font-bold" style={{ color: C.green }}>
+        <Check className="w-3 h-3 shrink-0" /> Sent
+        <img src="/logos/xero.svg" alt="Xero" className="w-3 h-3" />
+      </motion.span>
+    );
+  }
+
+  if (state === 'sending') {
+    return (
+      <span className="flex items-center justify-center gap-1 text-[9px] font-semibold text-[#1A1A1A]/55">
+        <Loader2 className="w-3 h-3 shrink-0 animate-spin" style={{ color: C.indigo }} /> Sending…
+      </span>
+    );
+  }
+
+  return (
+    <motion.button type="button" onClick={onSend}
+      animate={{ scale: [1, 1.045, 1] }} transition={{ duration: 1.3, repeat: Infinity, ease: 'easeInOut' }}
+      className="flex items-center justify-center gap-1 rounded-md px-1.5 py-1 text-[9px] font-bold text-white shadow-sm hover:opacity-90 transition-opacity"
+      style={{ backgroundColor: C.green }}>
+      <img src="/logos/xero.svg" alt="" className="w-3 h-3" /> Send to Xero
+    </motion.button>
+  );
+}
+
+function InvoiceRow({ r, syncState, onSend }) {
   return (
     <div className={`${GRID} px-3 py-2 border-b border-[#1A1A1A]/6 last:border-b-0 text-[10.5px] ${r.isNew ? 'bg-[#2F7D4F]/[0.05]' : ''}`}>
       <span className="font-mono text-[9.5px] font-semibold text-[#1A1A1A]/80 truncate">{r.inv}</span>
@@ -96,6 +148,7 @@ function InvoiceRow({ r }) {
       <Flag v={r.bal} />
       <span className={`text-right tabular-nums text-[9.5px] ${r.overdue ? 'font-bold' : 'text-[#1A1A1A]/50'}`}
         style={r.overdue ? { color: C.red } : undefined}>{r.due}</span>
+      <SyncCell r={r} state={syncState} onSend={onSend} />
     </div>
   );
 }
@@ -114,6 +167,8 @@ function Section({ emoji, title, amount, tone }) {
 export default function CashflowDemo() {
   /* idle → reading → matched → (click) → linked → report */
   const [phase, setPhase] = useState('idle');
+  /* the ledger hand-off, driven by its own click: idle → sending → sent */
+  const [syncState, setSyncState] = useState('idle');
 
   useEffect(() => {
     if (phase !== 'reading') return;
@@ -126,6 +181,14 @@ export default function CashflowDemo() {
     const t = setTimeout(() => setPhase('report'), 700);
     return () => clearTimeout(t);
   }, [phase]);
+
+  useEffect(() => {
+    if (syncState !== 'sending') return;
+    const t = setTimeout(() => setSyncState('sent'), 1400);
+    return () => clearTimeout(t);
+  }, [syncState]);
+
+  const replay = () => { setPhase('idle'); setSyncState('idle'); };
 
   const rows = phase === 'linked' || phase === 'report' ? [NEW_INVOICE, ...INVOICES] : INVOICES;
 
@@ -145,7 +208,7 @@ export default function CashflowDemo() {
               animate={{ x: [0, 4, 0] }} transition={{ duration: 1.1, repeat: Infinity, ease: 'easeInOut' }}>
               Run it again <ArrowRight className="w-3.5 h-3.5" />
             </motion.span>
-            <button type="button" onClick={() => setPhase('idle')}
+            <button type="button" onClick={replay}
               className="flex items-center gap-1.5 rounded-lg border px-3 py-1.5 text-[10.5px] font-semibold transition-colors hover:bg-[#5B5BD6]/[0.06]"
               style={{ borderColor: 'rgba(91,91,214,0.35)', color: C.indigo }}>
               <Play className="w-3 h-3" /> Replay
@@ -250,7 +313,7 @@ export default function CashflowDemo() {
       {/* the invoice ledger */}
       <div className="px-5 pb-4">
         <div className="bg-white rounded-xl border border-[#1A1A1A]/8 overflow-x-auto">
-          <div className="min-w-[700px]">
+          <div className="min-w-[800px]">
             <div className={`${GRID} px-3 py-2 border-b border-[#1A1A1A]/8 text-[8.5px] font-bold uppercase tracking-wide text-[#1A1A1A]/40`}>
               <span>Invoice #</span><span>Supplier</span><span>Type</span>
               <span className="text-right leading-tight">Deposit<br />30%</span>
@@ -258,10 +321,33 @@ export default function CashflowDemo() {
               <span className="text-center leading-tight">Deposit<br />paid</span>
               <span className="text-center leading-tight">Balance<br />paid</span>
               <span className="text-right">Due</span>
+              <span className="text-center leading-tight">Synced<br />to Xero</span>
             </div>
-            {rows.map(r => <InvoiceRow key={r.inv} r={r} />)}
+            {rows.map(r => (
+              <InvoiceRow key={r.inv} r={r}
+                syncState={syncState} onSend={() => setSyncState('sending')} />
+            ))}
           </div>
         </div>
+
+        {/* the second prompt — only once the invoice is actually on the ledger */}
+        <AnimatePresence mode="wait">
+          {phase === 'report' && syncState !== 'sent' && (
+            <motion.p key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
+              className="mt-2 px-1 text-[10px] text-[#1A1A1A]/45">
+              {syncState === 'sending'
+                ? 'Posting LF-2026-101 to Xero…'
+                : 'LF-2026-101 is the only one not in your books yet — send it across.'}
+            </motion.p>
+          )}
+          {syncState === 'sent' && (
+            <motion.p key="sent" initial={{ opacity: 0, y: -4 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.25, ease }}
+              className="mt-2 px-1 flex items-center gap-1.5 text-[10px] font-semibold" style={{ color: C.green }}>
+              <Check className="w-3 h-3 shrink-0" />
+              Posted to Xero as bill LF-2026-101 — Lianfa Textiles, $6,630, due Aug 18. No re-keying.
+            </motion.p>
+          )}
+        </AnimatePresence>
       </div>
 
       {/* phase 3 · the report */}
@@ -310,13 +396,22 @@ export default function CashflowDemo() {
                       <span className="tabular-nums font-semibold text-[#1A1A1A]/80">{money(PAYOUT)}</span>
                     </div>
                     <div className="flex items-baseline justify-between gap-2 py-[3px] text-[10px]">
+                      <span className="text-[#1A1A1A]/60">of which reimbursements approved</span>
+                      <span className="tabular-nums text-[#1A1A1A]/55">{money(REIMB)}</span>
+                    </div>
+                    <div className="flex items-baseline justify-between gap-2 py-[3px] text-[10px]">
                       <span className="text-[#1A1A1A]/60">Deposits {PAYOUT_DATE}</span>
                       <span className="text-[9px] text-[#1A1A1A]/35">in transit</span>
                     </div>
 
                     <div className="mt-3.5">
                       <Section emoji="💰" title="Cash on hand" amount={money(CASH)} />
-                      <div className="text-[9.5px] text-[#1A1A1A]/45 py-[3px]">Wise · USD $2,180 + CAD $1,327 (≈$940) · synced 09:40 UTC</div>
+                      <div className="flex items-center gap-1.5 py-[3px]">
+                        <img src="/logos/wise.svg" alt="Wise" className="w-3 h-3" />
+                        <span className="text-[9.5px] text-[#1A1A1A]/45">Wise $2,180</span>
+                        <img src="/logos/payoneer.svg" alt="Payoneer" className="w-3 h-3 ml-1" />
+                        <span className="text-[9.5px] text-[#1A1A1A]/45">Payoneer $940 · synced 09:40 UTC</span>
+                      </div>
                     </div>
 
                     <div className="mt-3.5 rounded-lg px-3 py-2.5" style={{ backgroundColor: 'rgba(47,125,79,0.07)', border: '1px solid rgba(47,125,79,0.20)' }}>
