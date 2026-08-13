@@ -113,6 +113,21 @@ const meta = {
     sections: PRICING_SECTIONS,
   },
 };
+/* Legal + support. These are not ad destinations, so they're exempt from the
+ * word-count guard below — but they DO need real route stubs, or GitHub Pages
+ * serves them as an HTTP 404 and the footer, the app's sign-up form, and any
+ * ad-platform policy review all hit a 404 on the privacy policy. */
+for (const [path, m] of Object.entries({
+  '/privacy': { title: 'Privacy Policy | DragonRestock',
+                description: 'How DragonRestock collects, uses, stores, shares and protects your data, including Amazon Selling Partner API data.' },
+  '/tos':     { title: 'Terms of Service | DragonRestock',
+                description: 'The terms governing your use of DragonRestock.' },
+  '/support': { title: 'Support | DragonRestock',
+                description: 'Help, documentation and contact for DragonRestock.' },
+})) {
+  meta[path] = { ...m, h1: m.title.split('|')[0].trim(), intro: m.description };
+}
+
 /* /features is an alias of /demo in App.jsx — identical copy, so it points its
  * canonical at /demo rather than at itself. Two self-canonicalling URLs with
  * the same content is exactly the duplicate-content signal this file exists to
@@ -175,8 +190,13 @@ for (const route of routes) {
  * to make a build pass. Every route here is an ad/SEO destination, so nothing
  * is exempt; add an EXEMPT() check only if support/legal routes get added. */
 const MIN_WORDS = 120;
+/* Only ad/SEO destinations are guarded. Legal and support pages are never ad
+ * landing pages, so thin prerendered copy there costs nothing — their real
+ * content renders client-side like every other route. */
+const EXEMPT = (r) => ['/privacy', '/tos', '/support'].includes(r);
 const thin = [];
 for (const route of routes) {
+  if (EXEMPT(route)) continue;
   const dir = route === '/' ? dist : join(dist, ...route.split('/').filter(Boolean));
   const text = readFileSync(join(dir, 'index.html'), 'utf8')
     .replace(/<script[\s\S]*?<\/script>|<style[\s\S]*?<\/style>|<!--[\s\S]*?-->/g, '')
@@ -189,4 +209,8 @@ if (thin.length) {
   console.error('Add real copy to the JSX-free data module and emit it here — see src/data/restockCopy.js');
   process.exit(1);
 }
-console.log(`postbuild: prerendered ${n} routes (title + description + canonical + OG + content), all >= ${MIN_WORDS} words`);
+const guarded = routes.filter(r => !EXEMPT(r)).length;
+console.log(
+  `postbuild: prerendered ${n} routes (title + description + canonical + OG + content); ` +
+  `${guarded} ad/SEO routes all >= ${MIN_WORDS} words, ${n - guarded} exempt (legal/support)`,
+);

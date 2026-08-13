@@ -28,3 +28,6 @@ dist-ssr
 *.sw?
 
 .env
+# MCP servers — per-machine, and OAuth/credentials live outside the repo.
+# Matches the convention in DragonBot-marketing (see the new-product-funnel skill).
+.mcp.json
