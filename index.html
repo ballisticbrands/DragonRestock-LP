@@ -34,12 +34,36 @@
       gtag('js', new Date());
       gtag('config', 'G-7JMJEMLRZD');
     </script>
-    <!-- TODO before paid traffic: the Meta pixel base snippet. Until it's here
-         every Meta event silently no-ops — track() guards on typeof window.fbq,
-         so nothing errors, nothing fires, and the retargeting pool stays empty. -->
+    <!-- Meta Pixel — dataset "DragonRestock website" (28716421651297621).
+         One dataset per product, all in the Dragon Suite portfolio: it keeps
+         measurement, Custom Conversions and retargeting pools un-mixed.
+         Products get pooled only as a combined lookalike SEED, at the audience
+         layer (a Website Custom Audience accepts multiple pixels), never here.
+
+         This base snippet is what makes the rest of the funnel work: every
+         Meta call in src/lib/track.js is guarded by `typeof window.fbq`, so
+         without it cta_click → InitiateCheckout silently no-ops and the
+         retargeting pool stays empty, with no error anywhere. -->
+    <script>
+      !function(f,b,e,v,n,t,s)
+      {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+      n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+      if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+      n.queue=[];t=b.createElement(e);t.async=!0;
+      t.src=v;s=b.getElementsByTagName(e)[0];
+      s.parentNode.insertBefore(t,s)}(window, document,'script',
+      'https://connect.facebook.net/en_US/fbevents.js');
+      fbq('init', '28716421651297621');
+      fbq('track', 'PageView');
+    </script>
+    <!-- Meta's <noscript> fallback img lives in <body>, not here: the HTML spec
+         only allows link/style/meta inside a <noscript> in <head>, and parse5
+         fails the Vite build on it. -->
   </head>
   <body>
     <div id="root"></div>
+    <noscript><img height="1" width="1" style="display:none" alt=""
+      src="https://www.facebook.com/tr?id=28716421651297621&ev=PageView&noscript=1" /></noscript>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>
