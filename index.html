@@ -8,6 +8,14 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>DragonRestock — Never run out of stock again</title>
     <meta name="description" content="DragonRestock tracks your Amazon sales velocity and lead times, and tells you exactly when to reorder every SKU — so you never stock out." />
+    <!-- Meta domain verification (Business Settings → Brand safety → Domains).
+         Must stay in this STATIC <head>: Meta's crawler doesn't run JavaScript,
+         so a tag injected by React would never be seen — and the same is true
+         of anything the prerender doesn't carry into every route stub.
+         Unverified domains can't own Aggregated Event Measurement slots, which
+         is what iOS traffic is optimised through. Don't remove it after the
+         green tick either; Meta re-checks and silently un-verifies. -->
+    <meta name="facebook-domain-verification" content="s7y3diqhzoui9l4zvujjfnp7cu3pek" />
     <!-- Microsoft Clarity — project "DragonRestock" (y1peimheyt).
          One project per product: mixing products in a single project makes the
          recordings and heatmaps unreadable for both. track() mirrors GA4 events
