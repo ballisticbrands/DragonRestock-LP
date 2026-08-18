@@ -164,11 +164,17 @@ function Section({ emoji, title, amount, tone }) {
   );
 }
 
-export default function CashflowDemo() {
+/* `interactive={false}` starts the panel at the end of its own story —
+   invoice read, linked to its PO, posted to Xero, report open — and takes
+   every button out. The landing page embeds it that way: there the panel
+   has to answer "what does this screen tell me" in one glance, and an
+   upload prompt is a screen that hasn't done anything yet. /demo keeps the
+   three phases, because playing them through is the point of that page. */
+export default function CashflowDemo({ interactive = true }) {
   /* idle → reading → matched → (click) → linked → report */
-  const [phase, setPhase] = useState('idle');
+  const [phase, setPhase] = useState(interactive ? 'idle' : 'report');
   /* the ledger hand-off, driven by its own click: idle → sending → sent */
-  const [syncState, setSyncState] = useState('idle');
+  const [syncState, setSyncState] = useState(interactive ? 'idle' : 'sent');
 
   useEffect(() => {
     if (phase !== 'reading') return;
@@ -199,7 +205,7 @@ export default function CashflowDemo() {
           <h4 className="font-clash font-semibold text-[19px] tracking-normal text-[#1A1A1A]">Cashflow Planner</h4>
           <p className="text-[12px] text-[#1A1A1A]/50 mt-0.5">Supplier invoices, matched to POs, priced against the money actually coming in.</p>
         </div>
-        {phase === 'report' && (
+        {phase === 'report' && interactive && (
           /* Same nudge as the Process button, so anyone who watched it
              run once can see how to run it again. */
           <span className="flex items-center gap-2 shrink-0">
@@ -219,7 +225,7 @@ export default function CashflowDemo() {
 
       {/* phase 1–2 · upload and match */}
       <div className="px-5 pb-4">
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={interactive}>
           {(phase === 'idle' || phase === 'reading') && (
             <motion.div key="up" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2 }}>
               {/* Set the scene, so a visitor knows which moment they're
@@ -331,7 +337,7 @@ export default function CashflowDemo() {
         </div>
 
         {/* the second prompt — only once the invoice is actually on the ledger */}
-        <AnimatePresence mode="wait">
+        <AnimatePresence mode="wait" initial={interactive}>
           {phase === 'report' && syncState !== 'sent' && (
             <motion.p key="hint" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} transition={{ duration: 0.2 }}
               className="mt-2 px-1 text-[10px] text-[#1A1A1A]/45">
@@ -350,8 +356,9 @@ export default function CashflowDemo() {
         </AnimatePresence>
       </div>
 
-      {/* phase 3 · the report */}
-      <AnimatePresence>
+      {/* phase 3 · the report. `initial` off when frozen — the report is
+          already there on mount, so there's nothing to reveal. */}
+      <AnimatePresence initial={interactive}>
         {phase === 'report' && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.35, ease }} className="overflow-hidden">

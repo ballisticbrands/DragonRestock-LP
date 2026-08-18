@@ -172,10 +172,21 @@ function SpikeSpark() {
   );
 }
 
-export default function ForecastDemo() {
+/* `interactive={false}` freezes the whole thing into a screenshot: chart
+   open, Daily selected, nothing clickable. The landing page embeds it that
+   way — there the point is to *see* Prime Day excluded from the baseline,
+   not to go poking at aggregations. /demo keeps it live.
+
+   `large` bumps the reasoning panel's type. It's a separate prop from
+   `interactive` on purpose: /demo shows this screen at its real UI size and
+   stays exactly as it is, while the landing page shows it as an
+   illustration a visitor reads once, in passing, and 12px doesn't survive
+   that. */
+export default function ForecastDemo({ interactive = true, large = false }) {
   const [chartOpen, setChartOpen] = useState(true);
-  const [mode, setMode] = useState('Weekly');
+  const [mode, setMode] = useState(interactive ? 'Weekly' : 'Daily');
   const p = bySku[SKU];
+  const open = interactive ? chartOpen : true;
 
   return (
     <div className="w-full rounded-2xl overflow-hidden bg-[#F7F8FA] border border-[#1A1A1A]/10 shadow-2xl shadow-[#1A1A1A]/15 select-none text-left">
@@ -208,31 +219,36 @@ export default function ForecastDemo() {
         </span>
 
         {/* the sparkline is the control */}
-        <button type="button" onClick={() => setChartOpen(v => !v)} aria-expanded={chartOpen}
-          className="ml-auto flex items-center gap-3 rounded-xl border border-[#1A1A1A]/10 bg-white px-3 py-2 hover:border-[#2563EB]/40 hover:bg-[#2563EB]/[0.03] transition-colors">
+        <button type="button" onClick={interactive ? () => setChartOpen(v => !v) : undefined}
+          aria-expanded={open} disabled={!interactive} tabIndex={interactive ? undefined : -1}
+          className={`ml-auto flex items-center gap-3 rounded-xl border border-[#1A1A1A]/10 bg-white px-3 py-2 transition-colors ${
+            interactive ? 'hover:border-[#2563EB]/40 hover:bg-[#2563EB]/[0.03]' : 'cursor-default'
+          }`}>
           <span className="text-right">
             <span className="block text-[8.5px] font-bold uppercase tracking-wide text-[#1A1A1A]/40">Velocity</span>
             <span className="block text-[20px] font-bold tabular-nums leading-none text-[#1A1A1A]">42.3</span>
           </span>
           <SpikeSpark />
-          <ChevronDown className={`w-4 h-4 text-[#1A1A1A]/35 transition-transform duration-300 ${chartOpen ? 'rotate-180' : ''}`} />
+          <ChevronDown className={`w-4 h-4 text-[#1A1A1A]/35 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
         </button>
       </div>
 
       {/* the AI explanation */}
       <div className="px-5 py-4">
-        <div className="rounded-xl p-4" style={{ backgroundColor: 'rgba(91,91,214,0.05)', border: '1px solid rgba(91,91,214,0.16)' }}>
-          <div className="flex items-center gap-1.5 text-[9.5px] font-bold uppercase tracking-wide mb-2" style={{ color: C.indigo }}>
-            <Sparkles className="w-3 h-3" /> Why this quantity
+        <div className={`rounded-xl ${large ? 'p-5' : 'p-4'}`} style={{ backgroundColor: 'rgba(91,91,214,0.05)', border: '1px solid rgba(91,91,214,0.16)' }}>
+          <div className={`flex items-center gap-1.5 font-bold uppercase tracking-wide ${large ? 'text-[11.5px] mb-2.5' : 'text-[9.5px] mb-2'}`} style={{ color: C.indigo }}>
+            <Sparkles className={large ? 'w-3.5 h-3.5' : 'w-3 h-3'} /> Why this quantity
           </div>
-          <p className="text-[12px] leading-relaxed text-[#1A1A1A]/75">
+          <p className={`leading-relaxed text-[#1A1A1A]/75 ${large ? 'text-[15px]' : 'text-[12px]'}`}>
             Units tripled between <span className="font-semibold">July 23 and July 26</span> — that was Prime Day, not a change
             in demand. I’ve excluded that window from the baseline and I’m forecasting on the 42.3/day trend either side of it.
             Ordering against the spike would have put roughly 900 units of dead stock into Q4.
           </p>
           <div className="flex flex-wrap gap-1.5 mt-3">
             {['Prime Day Jul 23–26 excluded', 'Q4 multiplier 1.6× from Oct 12', '25d production · 45d freight · 7d check-in'].map(chip => (
-              <span key={chip} className="rounded-md bg-white px-2 py-1 text-[9px] font-medium text-[#1A1A1A]/70 border border-[#1A1A1A]/8">{chip}</span>
+              <span key={chip} className={`rounded-md bg-white font-medium text-[#1A1A1A]/70 border border-[#1A1A1A]/8 ${
+                large ? 'px-2.5 py-1.5 text-[11.5px]' : 'px-2 py-1 text-[9px]'
+              }`}>{chip}</span>
             ))}
           </div>
         </div>
@@ -240,7 +256,7 @@ export default function ForecastDemo() {
 
       {/* the chart the sparkline opens */}
       <AnimatePresence initial={false}>
-        {chartOpen && (
+        {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.3, ease }} className="overflow-hidden">
             <div className="px-5 pb-5">
@@ -252,10 +268,11 @@ export default function ForecastDemo() {
                   </span>
                   <span className="flex items-center gap-1">
                     {['Daily', 'Weekly', 'Monthly'].map(m => (
-                      <button key={m} type="button" onClick={() => setMode(m)} aria-pressed={mode === m}
+                      <button key={m} type="button" onClick={interactive ? () => setMode(m) : undefined}
+                        aria-pressed={mode === m} disabled={!interactive} tabIndex={interactive ? undefined : -1}
                         className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10.5px] transition-colors ${
-                          mode === m ? 'font-bold text-[#1A1A1A]/85 bg-[#1A1A1A]/[0.05]' : 'font-medium text-[#1A1A1A]/45 hover:text-[#1A1A1A]/70'
-                        }`}>
+                          mode === m ? 'font-bold text-[#1A1A1A]/85 bg-[#1A1A1A]/[0.05]' : 'font-medium text-[#1A1A1A]/45'
+                        } ${interactive && mode !== m ? 'hover:text-[#1A1A1A]/70' : ''} ${interactive ? '' : 'cursor-default'}`}>
                         <span className={`w-2.5 h-2.5 rounded-full border-[3px] ${mode === m ? '' : 'border-[#1A1A1A]/20'}`}
                           style={mode === m ? { borderColor: C.green } : undefined} />
                         {m}

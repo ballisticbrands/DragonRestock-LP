@@ -38,7 +38,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import {
-  HERO_COPY, PAINS_COPY, SETUP_STEPS_COPY, SETUP_HELP_COPY, ANSWERS_COPY,
+  HERO_COPY, PAINS_HEAD_COPY, PAINS_COPY, BEYOND_REORDER_COPY, LOST_SALES_COPY,
+  SETUP_STEPS_COPY, SETUP_HELP_COPY, ANSWERS_COPY,
   PLATFORM_COPY, PILLARS_COPY, DIFFERENTIATORS_COPY, PRICING_FAQS,
 } from '../src/data/restockCopy.js';
 import { PLANS, INCLUDED, TRIAL } from '../src/data/plans.js';
@@ -65,10 +66,31 @@ const flat = (s = '') => String(s).replace(/\s+/g, ' ').trim();
  * the data holds — a page that clears 120 words by a hair is one edit away
  * from failing, and thin pages are what this whole file exists to prevent. */
 const LANDING_SECTIONS = [
-  { h: 'Why restocking is still a guess', items: PAINS_COPY.map(p => `${p.title}. ${p.body}`) },
+  { h: HERO_COPY.stockout.title, items: [HERO_COPY.stockout.body] },
+  /* a pain is either one problem→answer pair or several under `parts` */
+  { h: PAINS_HEAD_COPY.title, items: [
+      PAINS_HEAD_COPY.sub,
+      ...PAINS_COPY.flatMap(p => [
+        p.prefix ? `${p.prefix}: ${p.title}` : p.title,
+        ...(p.parts ?? [{ body: p.body, solution: p.solution }])
+          .map(part => `${part.body} DragonRestock: ${part.solution}`),
+        ...(p.credit ? [`${p.credit.title} ${p.credit.body}`] : []),
+        /* the three cards under the restock board, which live with the
+           actionables pain now rather than in a section of their own */
+        ...(p.key === 'actionables' ? ANSWERS_COPY.map(a => `${a.title}. ${a.body}`) : []),
+      ]),
+    ] },
+  { h: BEYOND_REORDER_COPY.title, items: [
+      `${BEYOND_REORDER_COPY.lead} ${BEYOND_REORDER_COPY.leadEmphasis} ${BEYOND_REORDER_COPY.leadAfter}`,
+      `DragonRestock: ${BEYOND_REORDER_COPY.solution}`,
+      ...BEYOND_REORDER_COPY.bullets.map(b => `${b.label} — ${b.text}`),
+      ...BEYOND_REORDER_COPY.items.map(i => `${i.title}. ${i.body} ${i.demoCaption}`),
+      BEYOND_REORDER_COPY.kicker,
+    ] },
+  { h: `${LOST_SALES_COPY.eyebrow} — ${LOST_SALES_COPY.title}`,
+    items: [LOST_SALES_COPY.lead, LOST_SALES_COPY.sub, LOST_SALES_COPY.caption] },
   { h: 'Set up with Claude in 10 minutes', items: SETUP_STEPS_COPY.map(s => `${s.title}. ${s.body}`) },
   { h: 'If your setup isn’t the standard one', items: SETUP_HELP_COPY.map(s => `${s.title}. ${s.body}`) },
-  { h: 'It tells you what to do, not what to look at', items: ANSWERS_COPY.map(a => `${a.title}. ${a.body}`) },
   { h: 'Everything running underneath the recommendation', items: PLATFORM_COPY.map(p => `${p.title}. ${p.desc}`) },
 ];
 

@@ -220,7 +220,7 @@ function TierLadder({ row }) {
   );
 }
 
-function Row({ row, open, onToggle }) {
+function Row({ row, open, onToggle, interactive }) {
   const p = bySku[row.sku];
   const a = ACTION[row.action];
   const total = row.fba + row.offsite;
@@ -231,8 +231,12 @@ function Row({ row, open, onToggle }) {
   return (
     <div className="border-b border-[#1A1A1A]/6 last:border-b-0">
       <div className={`${GRID} px-3 py-3`}>
-        <button type="button" onClick={onToggle} aria-expanded={open} aria-label={`Show the tier analysis for ${row.sku}`}
-          className="w-6 h-6 rounded-md flex items-center justify-center hover:bg-[#1A1A1A]/[0.05] transition-colors">
+        <button type="button" onClick={interactive ? onToggle : undefined} aria-expanded={open}
+          disabled={!interactive} tabIndex={interactive ? undefined : -1}
+          aria-label={`Show the tier analysis for ${row.sku}`}
+          className={`w-6 h-6 rounded-md flex items-center justify-center transition-colors ${
+            interactive ? 'hover:bg-[#1A1A1A]/[0.05]' : 'cursor-default'
+          }`}>
           <ChevronDown className={`w-3.5 h-3.5 text-[#1A1A1A]/35 transition-transform duration-300 ${open ? 'rotate-180' : ''}`} />
         </button>
 
@@ -289,25 +293,27 @@ function Row({ row, open, onToggle }) {
         {open && (
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.28, ease }} className="overflow-hidden">
-            <div className="mx-2 mb-2.5 rounded-xl p-3.5"
+            {/* the written half of the recommendation — reading size, not
+                the UI scale the ladder and the row above it use */}
+            <div className="mx-2 mb-2.5 rounded-xl p-5"
               style={{ backgroundColor: 'rgba(91,91,214,0.045)', border: '1px solid rgba(91,91,214,0.14)' }}>
-              <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wide mb-2.5" style={{ color: C.indigo }}>
-                <Sparkles className="w-3 h-3" /> Price tiers tested
+              <div className="flex items-center gap-1.5 text-[11.5px] font-bold uppercase tracking-wide mb-3" style={{ color: C.indigo }}>
+                <Sparkles className="w-3.5 h-3.5" /> Price tiers tested
               </div>
               <TierLadder row={row} />
-              <p className="text-[10.5px] leading-relaxed text-[#1A1A1A]/70 mt-3">{row.note}</p>
+              <p className="text-[14px] leading-relaxed text-[#1A1A1A]/70 mt-4">{row.note}</p>
 
               {row.cliff && (
-                <div className="mt-2.5 rounded-lg px-3 py-2.5 flex items-start gap-2"
+                <div className="mt-3 rounded-lg px-3.5 py-3 flex items-start gap-2.5"
                   style={{ backgroundColor: 'rgba(220,38,38,0.05)', border: '1px solid rgba(220,38,38,0.16)' }}>
-                  <Clock className="w-3.5 h-3.5 shrink-0 mt-px" style={{ color: C.red }} />
-                  <span className="text-[10.5px] leading-relaxed text-[#1A1A1A]/70">
+                  <Clock className="w-4 h-4 shrink-0 mt-px" style={{ color: C.red }} />
+                  <span className="text-[14px] leading-relaxed text-[#1A1A1A]/70">
                     <span className="font-bold" style={{ color: C.red }}>Long-term storage: </span>{row.cliff}
                   </span>
                 </div>
               )}
               {row.footnote && (
-                <p className="text-[10px] leading-relaxed text-[#1A1A1A]/50 mt-2 pl-2.5 border-l-2" style={{ borderColor: 'rgba(91,91,214,0.30)' }}>
+                <p className="text-[12.5px] leading-relaxed text-[#1A1A1A]/50 mt-2.5 pl-3 border-l-2" style={{ borderColor: 'rgba(91,91,214,0.30)' }}>
                   {row.footnote}
                 </p>
               )}
@@ -319,8 +325,14 @@ function Row({ row, open, onToggle }) {
   );
 }
 
-export default function LiquidationDemo() {
+/* `interactive={false}` freezes the board into a screenshot: SHIRT-GRN-S
+   stays expanded on its tier ladder and no row responds to a click. The
+   landing page embeds it that way — there the job of the panel is to show
+   that a decision comes out priced, and a visitor who starts collapsing
+   rows only finds less. /demo keeps it live. */
+export default function LiquidationDemo({ interactive = true }) {
   const [open, setOpen] = useState('SHIRT-GRN-S');
+  const openSku = interactive ? open : 'SHIRT-GRN-S';
 
   const count = (k) => ROWS.filter(r => severityOf(r.aging) === k).length;
   const skusAtRisk = ROWS.filter(r => severityOf(r.aging) !== 'none').length;
@@ -379,7 +391,8 @@ export default function LiquidationDemo() {
               <span className="text-right">Action</span>
             </div>
             {ROWS.map(r => (
-              <Row key={r.sku} row={r} open={open === r.sku} onToggle={() => setOpen(open === r.sku ? null : r.sku)} />
+              <Row key={r.sku} row={r} interactive={interactive}
+                open={openSku === r.sku} onToggle={() => setOpen(open === r.sku ? null : r.sku)} />
             ))}
           </div>
         </div>

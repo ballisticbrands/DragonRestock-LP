@@ -26,26 +26,159 @@ export const HERO_COPY = {
     'Every marketplace & warehouse',
   ],
   reassurances: ['Free 30-day trial', 'No credit card', 'Your data syncs in hours'],
+  /* The thesis of the whole page, stated where a visitor lands. It is
+   * repeated as the heading of the "Why it matters" section further down —
+   * deliberately, and in the same words: the hero asserts it, that section
+   * proves it with the number. The supporting detail (no report, no line
+   * item) is only spelled out down there, so the two aren't the same
+   * paragraph twice. */
+  stockout: {
+    title: 'The most expensive thing an FBA business does all year is run out of stock.',
+    body: 'And it’s the one cost Amazon never invoices you for. Storage, referral, fulfilment and ads are itemised to the cent — an empty listing is billed at nothing and takes more than any of them.',
+  },
 };
 
-/* ─── Landing: the problem ─── */
+/* ─── Landing: the problem ───
+ * Every pain is aimed at what the seller is using TODAY — a spreadsheet, or
+ * one of the restock tools — and says so twice over: the `prefix` labels the
+ * whole card as being about the competition, and the words underneath keep
+ * naming the category, because a problem that reads as generic reads as
+ * nobody's.
+ *
+ * Only one brand is ever named. SoStocked appears twice on this page — the
+ * hero subhead and the `credit` note on problem 03 — and no other competitor
+ * appears at all; head-to-heads live on /compare/<competitor>. The `credit`
+ * note exists because the actionables claim is simply not true of SoStocked,
+ * and a visitor who runs it would catch that inside a second. Conceding the
+ * point it has earned and drawing the line where it actually falls is worth
+ * more than a claim they know to be wrong.
+ *
+ * Every pain then carries its own `solution` line and the page renders the
+ * two together — a problem a visitor has to mentally pair with the product
+ * is a problem they scroll past. */
+/* The sub stays on configuration, maintenance and the missing intelligence.
+ * What these tools don't do at all — liquidation, cashflow — is a later
+ * beat on the page and is deliberately kept out of here. */
+export const PAINS_HEAD_COPY = {
+  eyebrow: 'The problem with the tools you’re using now',
+  title: 'Spreadsheet or restock software — you’re still guessing.',
+  sub: 'The tools in this category all stop in the same place. Getting one configured takes weeks, keeping it configured never ends — and after all that they run the same math and hand you a number. There’s no intelligence anywhere near the estimate.',
+};
+
 export const PAINS_COPY = [
+  /* One problem, two halves. `parts` renders as problem → answer, twice,
+   * under a single heading: setup and maintenance are the same complaint
+   * either side of go-live, so splitting them into two numbered problems
+   * overstated the count — but running them together in one paragraph made
+   * both harder to follow. */
   {
-    key: 'spreadsheet',
-    title: 'A spreadsheet that’s wrong the moment you save it',
-    body: 'Velocity, lead times, in-transit units, restock limits — all hand-maintained across tabs. One stale number and you either stock out or tie up cash in inventory you can’t sell.',
+    key: 'configuration',
+    demo: 'onboard',
+    prefix: 'Competitors',
+    title: 'Setup is a project, and it never ends',
+    parts: [
+      {
+        label: 'Setup',
+        body: 'Restock software wants supplier tables, lead-time rules and an import wizard per column before it gives you one useful number back. Most sellers never finish.',
+        solution: 'Paste a link to the costs sheet you already keep. Claude maps it to your SKUs, fills the gaps, and asks about anything it can’t work out — 10 minutes, not a weekend.',
+      },
+      {
+        label: 'Maintenance',
+        body: 'Then it needs maintaining forever. Costs drift, lead times slip, a new SKU launches with nothing filled in — so the tool forecasts on numbers no one has checked in months. A spreadsheet is worse: it’s wrong the moment you save it.',
+        solution: 'It does the chasing, not you. When a new SKU lands with no COGS on file, or a lead time looks nothing like what that supplier is actually delivering, DragonRestock asks you for it in Claude — and you answer in the chat. Nothing to remember, nothing to go and update.',
+      },
+    ],
   },
   {
-    key: 'lead-times',
-    title: 'Lead times you can’t see around',
-    body: 'By the time the dashboard says “low”, your supplier still needs 30 days, the boat needs 40, and Amazon needs a week to check it in. The decision was due months ago.',
+    key: 'calculator',
+    prefix: 'Competitors',
+    title: 'The engine is a calculator. Your business isn’t',
+    body: 'Every tool in the category runs the same math: velocity × lead time + a buffer. None of them has heard of Hormuz closing on your freight, your supplier shutting for Chinese New Year, or a Prime Day spike that was a promo, not demand.',
+    solution: 'It’s fed what’s happening outside your account — the Strait of Hormuz flaring up and putting your freight two weeks late, this year’s Prime Day dates — and reasons with it. And it keeps an AI knowledge base of your own: your supplier’s factory holidays, their blackout days, whatever you know. Tell it once and it’s in every recommendation after, with the reason written in a line you can read.',
   },
+  /* Problem 03 is the old "Clear actionables" section turned inside out. It
+   * used to sit further down the page as a solution pitch; as a problem it
+   * does more work, and the restock board and the three ANSWERS_COPY cards
+   * come up the page with it as the answer. */
   {
-    key: 'software',
-    title: 'Software you’re not on top of',
-    body: 'Owning a tool isn’t the same as running one. Stale lead times, an unreconciled shipment, a supplier nobody chased — the recommendation was fine, the operation around it wasn’t.',
+    key: 'actionables',
+    prefix: 'Competitors',
+    title: 'Filters, alerts and reports. Never an instruction',
+    body: 'Everything most of these tools produce ends the same way — with you still having to decide. Which SKU, how many units, from which supplier, by when. A red badge is not a decision, and a report is just work in a nicer font.',
+    credit: {
+      title: 'Credit where it’s due: SoStocked is the exception.',
+      body: 'It does hand you a quantity and a date — it’s the one tool in the category that ends on an action rather than a chart. But the number arrives bare. There’s no reasoning attached, nothing that knows why this quarter isn’t last quarter, and no AI anywhere in it.',
+    },
+    solution: 'It does the deciding and hands you the instruction: the SKU, the quantity, the supplier, and the date the order has to go out. Expand any row and the whole calculation is sitting underneath it.',
+    demoCaption: 'Expand any row to see the quantity justified — lead-time legs, seasonality, and seven windows of velocity.',
   },
 ];
+
+/* The fourth beat of the problem section, and the one nobody else in the
+ * category answers at all: reordering is a third of inventory management.
+ * Kept as a band rather than a fourth card because it carries two products
+ * (liquidation and cashflow) and needs the room to name both. */
+export const BEYOND_REORDER_COPY = {
+  title: 'And reordering is only a third of the job',
+  /* `lead` renders with its last clause bold — the one question the whole
+   * category answers — so the two it ignores land as a contrast. */
+  lead: 'Every tool in this category answers one question:',
+  leadEmphasis: 'when to buy more.',
+  leadAfter: 'That leaves other important aspects of inventory that decide whether the business actually works.',
+  /* The answer half of problem 04, and the only one in the band: the two
+   * rows underneath are the screens, not another argument. `bullets` render
+   * inside the answer as the two dashboards being named. */
+  solution: 'It ships the other two as dashboards of their own, beside the restock plan and running on the same numbers:',
+  bullets: [
+    { label: 'Liquidation', text: 'what to dispose or discount' },
+    { label: 'Cashflow', text: 'how you fund any of it' },
+  ],
+  /* The two screens, once the pair above has made the argument. No problem →
+   * answer of their own: the charge was made once for the whole band, and
+   * repeating it per row turns one point into three.
+   *
+   * `demoCaption` says what a visitor is looking at in the frozen state —
+   * the panels are not clickable here, so nothing in them can explain
+   * itself on demand. */
+  items: [
+    {
+      key: 'liquidation',
+      title: 'Liquidation: what to dispose or discount',
+      body: 'Which SKUs to discount and to exactly which price, which to hold because they’re seasonal rather than dead, and which to clear out — with the monthly profit worked out on every option, not a badge that says “aging”.',
+      demoCaption: 'Four price tiers tested on the same overstocked tee, each priced per month net of fees — and the row below it says hold, because seasonal stock isn’t dead stock.',
+      href: '/demo#liquidation',
+    },
+    {
+      key: 'cashflow',
+      title: 'Cashflow: how you fund any of it',
+      body: 'Supplier invoices matched to their PO, deposits and balances run against your real Amazon payout dates and bank balances — so a timing squeeze shows up weeks before you’ve wired anything.',
+      demoCaption: 'The new invoice has already matched itself to PO SHIRT#191 and posted to Xero. The line that matters is at the bottom: the month nets out positive and there’s still a day you can’t cover.',
+      href: '/demo#cashflow',
+    },
+  ],
+  ctaLabel: 'Open it in the live demo',
+  kicker: 'Buy, clear and fund in one place. That’s managing an inventory business — not running a reorder queue.',
+};
+
+/* The evidence that closes the problem section. `lead` is the join: without
+ * it the lost-sales figure reads as a separate feature pitch instead of the
+ * bill for everything above it. */
+export const LOST_SALES_COPY = {
+  /* Matches the nav label that points here — a visitor who clicks "Why it
+   * matters" should land on a section wearing the same name. */
+  eyebrow: 'Why it matters',
+  lead: 'And every one of those problems ends in the same place.',
+  title: '💸 See your lost sales, in dollars.',
+  /* One paragraph, and it has three jobs: name the cost, say why nobody
+   * sees it, and get out of the way of the panel. The panel is the
+   * argument here — anything longer is the page explaining a screen the
+   * visitor could just be looking at. */
+  sub: 'Stockouts cost more than any fee Amazon charges you, and they’re the only one that never reaches your P&L. DragonRestock prices every one in your history — then carries the chart past today, so the next one arrives with a date on it.',
+  /* The panel here is live, unlike every other demo on this page — this
+   * line is what tells a visitor that, because a screen that looks like a
+   * screenshot gets treated like one. */
+  caption: 'Live, on a sample seller’s catalogue — open any product and scroll its chart past Today.',
+};
 
 /* ─── Landing: the 10-minute setup ─── */
 export const SETUP_STEPS_COPY = [
@@ -142,16 +275,20 @@ export const PILLARS_COPY = [
     ],
     shot: 'Restock recommendations',
   },
+  /* This pillar leads with the forecast half on purpose. The screen does
+   * both — it reconstructs the year behind you and carries the same chart
+   * past today — but a stockout already had is a bill you can't pay, and
+   * the one still coming is the only half a visitor can act on. */
   {
     id: 'lost-sales',
     eyebrow: 'Lost sales analysis',
-    title: 'Every stockout you’ve had, priced.',
-    body: 'DragonRestock reconstructs a year of inventory state per SKU and lays your daily sales over it — red where you were out, amber where you were low. The flat line inside every red band is the money that didn’t happen.',
+    title: 'Every stockout priced — including the one you haven’t had yet.',
+    body: 'DragonRestock reconstructs a year of inventory state per SKU and lays your daily sales over it — red where you were out, amber where you were low. Then it keeps going past today: forecast demand against the stock actually on hand and the PO actually on the water, so the next stockout sits on the same chart as the last one, with a date and a price on it.',
     bullets: [
-      'Open a product for its full year of sales against inventory state',
-      'Hover any day for units sold, expected baseline, and what it cost',
-      'Revenue and profit loss both priced, net of referral and FBA fees',
-      'Low-stock days counted too — you don’t have to hit zero to lose sales',
+      'One chart per product, history and forecast on the same spine',
+      'Days out of stock ahead, and the revenue that falls inside them',
+      'Revenue and profit both priced, net of referral and FBA fees',
+      'What another week of waiting adds, so the order-by date has a number on it',
     ],
     shot: 'Lost sales analysis',
   },

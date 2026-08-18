@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowRight, ShieldCheck, Sparkles, AlertTriangle, Check, TrendingDown,
-  FileSpreadsheet, Ship, BadgeCheck, MessageSquare, ListChecks, Send, BellOff, MousePointerClick,
+  Settings2, Calculator, BellOff, BadgeCheck, MessageSquare, ListChecks, Send, MousePointerClick,
   LineChart, Boxes, BookOpen, Recycle, Wallet, ClipboardList, PackageCheck,
   Warehouse, Building2, Timer, Mail, Puzzle, FileText,
 } from 'lucide-react';
@@ -11,15 +11,19 @@ import SiteFooter from '../components/landing/SiteFooter';
 import Eyebrow from '../components/landing/Eyebrow';
 import SectionHead from '../components/landing/SectionHead';
 import MCPChatDemo from '../components/landing/MCPChatDemo';
-import LostSalesDemo from '../components/landing/LostSalesDemo';
+import LostSalesForecastDemo from '../components/landing/LostSalesForecastDemo';
 import RestockBoardDemo from '../components/landing/RestockBoardDemo';
+import ForecastDemo from '../components/landing/ForecastDemo';
+import LiquidationDemo from '../components/landing/LiquidationDemo';
+import CashflowDemo from '../components/landing/CashflowDemo';
 import { ease, fadeUp, t } from '../components/landing/theme';
 import { SIGNUP_URL, CONTACT_EMAIL } from '../config';
 /* All marketing copy on this page lives in the JSX-free data module so the
    build-time prerender can emit it — see src/data/restockCopy.js. This file
    supplies icons, logos and layout; it must not carry new copy of its own. */
 import {
-  PAINS_COPY, SETUP_STEPS_COPY, SETUP_HELP_COPY, ANSWERS_COPY, PLATFORM_COPY,
+  HERO_COPY, PAINS_HEAD_COPY, PAINS_COPY, BEYOND_REORDER_COPY, LOST_SALES_COPY, SETUP_STEPS_COPY,
+  SETUP_HELP_COPY, ANSWERS_COPY, PLATFORM_COPY,
 } from '../data/restockCopy';
 
 /* ──────────────────────────────────────────────────────────────
@@ -30,9 +34,12 @@ import {
    dashboard that recommends actions on aging stock, and a cashflow
    planner that tells you whether you can afford the buy.
 
-   Naming rule: SoStocked is referenced exactly twice — the hero
-   subhead and the "Depth & control" section — as a depth benchmark,
-   never as an attack. No other competitor appears on this page;
+   Naming rule: SoStocked is referenced exactly twice on this page —
+   the hero subhead, and the credit note on problem 03 where it is
+   conceded the actionables point before the line is drawn at the
+   missing reasoning. A depth benchmark and an honest exception, never
+   an attack. (The "Depth & control" section carrying the other named
+   mention lives on /demo.) No other competitor appears here;
    head-to-head comparisons live on /compare/<competitor> routes.
 
    Section order deliberately puts "How it works" high on the page:
@@ -95,6 +102,25 @@ function Hero({ dark }) {
               </span>
             ))}
           </div>
+
+          {/* The thesis, under the buttons rather than above the headline:
+              the h1 is the promise a visitor came for, and putting the
+              problem first would make them read a complaint before they know
+              what this is. Left-aligned inside a centred hero because two
+              sentences of argument set centred read as a poster.
+
+              Neutral card, not the red alert used further down — this is a
+              fact the page is built on, and opening on an alarm undercuts
+              "ready to approve" three inches above it. */}
+          <div className={`mt-12 mx-auto max-w-2xl rounded-2xl p-5 sm:p-6 flex items-start gap-4 text-left ${t.card(dark)}`}>
+            <span className="w-10 h-10 rounded-xl bg-[#DC2626]/10 text-[#DC2626] flex items-center justify-center shrink-0">
+              <TrendingDown className="w-5 h-5" />
+            </span>
+            <p className={`text-[15px] sm:text-[15.5px] leading-[1.6] ${t.muted(dark)}`}>
+              <span className={`font-semibold ${t.heading(dark)}`}>{HERO_COPY.stockout.title}</span>{' '}
+              {HERO_COPY.stockout.body}
+            </p>
+          </div>
         </motion.div>
       </div>
     </section>
@@ -132,50 +158,368 @@ function Authority({ dark }) {
   );
 }
 
-/* ─── 3 · The problem ─── */
-const PAIN_ICONS = { spreadsheet: FileSpreadsheet, 'lead-times': Ship, software: BellOff };
-const PAINS = PAINS_COPY.map(p => ({ ...p, icon: PAIN_ICONS[p.key] }));
+/* ─── 3 · The problem ───
+   One problem per row, not a card grid: a row has the width to carry an
+   illustration beside the words, and cards pushed the copy into paragraphs
+   nobody reads. Every row is a pair — the pain, then immediately what we do
+   about it — because a problem a visitor has to mentally match to the
+   product is a problem they scroll past. Both halves live in PAINS_COPY.
+
+   Two rows, not three. Setup and maintenance share one — they're the same
+   complaint about configuration, before and after go-live — and the
+   onboarding transcript illustrates both. The calculator row carries the
+   forecast screen instead, frozen so nobody wanders off into the
+   aggregation tabs: the job of that image is to show Prime Day being kept
+   out of the baseline, nothing else.
+
+   Both illustrations are the real components from /demo rather than
+   screenshots, so neither can drift out of sync with the page it came from. */
+/* every key in PAINS_COPY needs an entry here — a missing one renders as
+   `undefined` and takes the whole page down with it */
+const PAIN_ICONS = { configuration: Settings2, calculator: Calculator, actionables: BellOff };
+/* numbered so the section reads as a list you can work down. The count runs
+   on into the liquidation/cashflow band at the foot of the section, which is
+   problem four — it just needs a band rather than a row to hold two
+   products. Numbering is a layout affordance, so it's generated here rather
+   than written into the copy module. */
+const PAINS = PAINS_COPY.map((p, i) => ({ ...p, icon: PAIN_ICONS[p.key], n: `0${i + 1}` }));
+const BEYOND_N = `0${PAINS.length + 1}`;
+/* what an instruction actually contains — the three cards under the
+   restock board in problem 03. They absorbed what used to be a separate
+   "Reorder dates" pillar, so the order-by date, the quantity and the
+   lead-time legs all live here. */
+const ANSWER_ICONS = { instruction: ListChecks, reasoning: Sparkles, 'next-step': Send };
+const ANSWERS = ANSWERS_COPY.map(a => ({ ...a, icon: ANSWER_ICONS[a.key] }));
+
+const CONFIG_PAIN = PAINS.find(p => p.key === 'configuration');
+const REASONING_PAIN = PAINS.find(p => p.key === 'calculator');
+const ACTION_PAIN = PAINS.find(p => p.key === 'actionables');
+const BEYOND_ICONS = { liquidation: Recycle, cashflow: Wallet };
+/* The two screens themselves, frozen — same components /demo runs, so
+   neither can drift out of sync with the page it came from. Every key in
+   BEYOND_REORDER_COPY.items needs an entry here. */
+const BEYOND_DEMOS = { liquidation: LiquidationDemo, cashflow: CashflowDemo };
 
 function Pain({ dark }) {
   const iconWrap = dark ? 'bg-white/[0.06] text-white/70' : 'bg-[#1A1A1A]/[0.04] text-[#1A1A1A]/70';
 
+  const PainNumber = ({ n }) => (
+    <span className={`text-[11px] font-bold uppercase tracking-[0.16em] ${
+      dark ? 'text-white/35' : 'text-[#1A1A1A]/35'
+    }`}>
+      Problem <span className={t.green(dark)}>{n}</span>
+    </span>
+  );
+
+  /* The one place a competitor is conceded a point. Set apart with a rule
+     down the side so it reads as an aside in our own voice, not as more of
+     the charge above it. */
+  const Credit = ({ title, body }) => (
+    <div className={`mt-5 pl-4 border-l-2 ${dark ? 'border-[#FF9900]/40' : 'border-[#B45309]/30'}`}>
+      <p className={`text-[15px] leading-[1.6] ${t.muted(dark)}`}>
+        <span className={`font-semibold ${dark ? 'text-white/85' : 'text-[#1A1A1A]/80'}`}>{title} </span>
+        {body}
+      </p>
+    </div>
+  );
+
+  /* The beat label: amber for the charge, green for the answer. The page
+     already spends amber on "Competitors:" and green on everything that is
+     ours, so a reader who has scrolled this far doesn't have to be taught
+     the code — but the word is there anyway, because a colour is not a
+     label. `topic` keeps "Setup" and "Maintenance" visible without a second
+     line of labels stacked on the first. */
+  const BeatLabel = ({ icon: Icon, tone, children }) => (
+    <span className={`flex items-center gap-2 mb-2.5 text-[10.5px] font-bold uppercase tracking-[0.16em] ${
+      tone === 'green' ? t.green(dark) : (dark ? 'text-[#F5C451]' : 'text-[#B45309]')
+    }`}>
+      <Icon className="w-[13px] h-[13px] shrink-0" />
+      {children}
+    </span>
+  );
+
+  /* One problem → answer beat, and the only shape the section uses. The
+     answer sits on its own tinted surface rather than under a hairline, so
+     the two halves are different objects on the page instead of two
+     paragraphs with a line between them.
+
+     `label` is the topic ("Setup", "Maintenance") and only problem 01 has
+     one — it carries two beats under a single heading, and without the
+     topic they'd read as one long complaint. `credit` is problem 03's
+     concession and belongs to the charge, so it stays above the answer. */
+  const Pair = ({ label, body, solution, credit, children }) => (
+    <div>
+      <BeatLabel icon={AlertTriangle} tone="amber">
+        The problem
+        {label && (
+          <>
+            <span className={dark ? 'text-white/30' : 'text-[#1A1A1A]/30'}>·</span>
+            <span className={dark ? 'text-white/45' : 'text-[#1A1A1A]/45'}>{label}</span>
+          </>
+        )}
+      </BeatLabel>
+      <p className={`text-[16px] leading-[1.6] ${t.muted(dark)}`}>{body}</p>
+      {credit && <Credit {...credit} />}
+
+      <div className={`mt-4 rounded-xl p-4 sm:p-5 border ${
+        dark ? 'bg-[#98CC65]/[0.07] border-[#98CC65]/20' : 'bg-[#2F7D4F]/[0.06] border-[#2F7D4F]/20'
+      }`}>
+        <BeatLabel icon={BadgeCheck} tone="green">DragonRestock</BeatLabel>
+        <p className={`text-[15.5px] leading-[1.6] ${dark ? 'text-white/80' : 'text-[#1A1A1A]/75'}`}>
+          {solution}
+        </p>
+        {/* anything the answer needs beyond a paragraph — problem 04 names
+            its two dashboards here */}
+        {children}
+      </div>
+    </div>
+  );
+
+  /* One problem, one heading — but a problem may hold several problem →
+     answer pairs under it (`parts`), which is how setup and maintenance sit
+     together as problem 01 without inflating the count to four. */
+  const PainCopy = ({ icon: Icon, title, body, solution, n, parts, prefix, credit }) => (
+    <div className="text-left">
+      <div className="flex items-center gap-3 mb-5">
+        <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${iconWrap}`}>
+          <Icon className="w-[22px] h-[22px]" />
+        </div>
+        <PainNumber n={n} />
+      </div>
+      {/* the prefix carries the comparison: without it each headline reads
+          as a general observation rather than a charge against the tools
+          the visitor is paying for today */}
+      <h3 className={`font-clash font-semibold text-[22px] sm:text-[26px] leading-tight tracking-[-0.02em] mb-5 ${t.heading(dark)}`}>
+        {prefix && <span className="text-[#B45309]">{prefix}: </span>}
+        {title}
+      </h3>
+
+      {parts ? (
+        <div className="space-y-7">
+          {parts.map(part => <Pair key={part.label} {...part} />)}
+        </div>
+      ) : (
+        <Pair body={body} solution={solution} credit={credit} />
+      )}
+    </div>
+  );
+
   return (
     <section id="problem" className="py-24 scroll-mt-24">
       <div className="max-w-6xl mx-auto px-6">
-        <SectionHead dark={dark} className="mb-14" eyebrow="The problem" accent="orange"
-          title="Restocking is still a guess."
-          sub="A spreadsheet, or software nobody ever finished configuring or continuously maintains — either way the plan is only as good as the operation behind it, and every gap costs you sales or cash." />
+        <SectionHead dark={dark} className="mb-14" accent="orange"
+          eyebrow={PAINS_HEAD_COPY.eyebrow}
+          title={PAINS_HEAD_COPY.title}
+          sub={PAINS_HEAD_COPY.sub} />
 
-        <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.1, ease }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {PAINS.map(({ icon: Icon, title, body }) => (
-            <div key={title} className={`${t.card(dark)} rounded-2xl p-7 text-left flex flex-col`}>
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-5 ${iconWrap}`}>
-                <Icon className="w-[22px] h-[22px]" />
-              </div>
-              <h3 className={`font-clash font-semibold text-[20px] leading-tight tracking-[-0.01em] mb-2.5 ${t.heading(dark)}`}>{title}</h3>
-              <p className={`text-[15px] leading-[1.6] ${t.muted(dark)}`}>{body}</p>
+        <div className="space-y-4">
+          {/* Configuration: getting set up, and staying set up. */}
+          <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.06, ease }}
+            className={`${t.card(dark)} rounded-2xl p-7 sm:p-9 grid lg:grid-cols-[minmax(0,0.95fr)_minmax(0,1.05fr)] gap-8 lg:gap-12 items-stretch`}>
+            {/* stretched, not centered: the chat window sizes itself to the
+                full height of the copy beside it and scrolls internally */}
+            <MCPChatDemo dark={dark} only="onboard" compact />
+
+            <div className="flex flex-col justify-center">
+              <PainCopy {...CONFIG_PAIN} />
             </div>
-          ))}
-        </motion.div>
+          </motion.div>
 
-        {/* Evidence: what the gaps already cost, priced. */}
-        <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.15, ease }} className="mt-20">
-          <h3 className={`font-clash font-semibold text-2xl sm:text-3xl leading-tight tracking-[-0.02em] text-center mb-3 ${t.heading(dark)}`}>
-            💸 See your lost sales, in dollars.
-          </h3>
-          <p className={`text-[16px] text-center max-w-2xl mx-auto mb-10 leading-[1.6] ${t.muted(dark)}`}>
-            DragonRestock reconstructs every stockout in your history and puts a price on it — the units you couldn’t
-            sell, the days you were dark, and what each one cost you.
+          {/* Reasoning: the screen goes under the words here, because the
+              chart needs the full width to read at all. */}
+          <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.1, ease }}
+            className={`${t.card(dark)} rounded-2xl p-7 sm:p-9`}>
+            <div className="max-w-3xl">
+              <PainCopy {...REASONING_PAIN} />
+            </div>
+            <div className="mt-9">
+              <ForecastDemo interactive={false} large />
+            </div>
+          </motion.div>
+
+          {/* Actionables: the restock board is the answer, so it gets the
+              full width, and the three ANSWERS cards break down what an
+              instruction contains. */}
+          <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.14, ease }}
+            className={`${t.card(dark)} rounded-2xl p-7 sm:p-9`}>
+            <div className="max-w-3xl">
+              <PainCopy {...ACTION_PAIN} />
+            </div>
+
+            <div className="mt-9">
+              <RestockBoardDemo short large />
+            </div>
+            <p className={`text-center text-[13px] mt-4 ${dark ? 'text-white/40' : 'text-[#1A1A1A]/40'}`}>
+              {ACTION_PAIN.demoCaption}
+            </p>
+
+            <div className="mt-8 grid grid-cols-1 md:grid-cols-3 gap-4">
+              {ANSWERS.map(({ icon: Icon, title, body }) => (
+                <div key={title} className={`rounded-xl p-6 ${dark ? 'bg-white/[0.04]' : 'bg-[#1A1A1A]/[0.03]'}`}>
+                  <div className={`w-10 h-10 rounded-lg flex items-center justify-center mb-4 ${
+                    dark ? 'bg-[#98CC65]/12 text-[#98CC65]' : 'bg-[#2F7D4F]/10 text-[#2F7D4F]'
+                  }`}>
+                    <Icon className="w-[20px] h-[20px]" />
+                  </div>
+                  <h4 className={`font-clash font-semibold text-[18px] leading-tight tracking-[-0.01em] mb-2 ${t.heading(dark)}`}>{title}</h4>
+                  <p className={`text-[14.5px] leading-[1.6] ${t.muted(dark)}`}>{body}</p>
+                </div>
+              ))}
+            </div>
+          </motion.div>
+        </div>
+
+        {/* The fourth beat, and the one nothing else in the category answers:
+            reordering is a third of the job. A band rather than a fourth card
+            because it carries two products, each of which gets its own row
+            and its own screen underneath — frozen, because the point here is
+            to see that these exist, and /demo is where you go to poke them. */}
+        <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.12, ease }}
+          className={`mt-4 rounded-2xl p-8 sm:p-10 ${t.card(dark)}`}>
+          {/* One pair for the whole band — the charge is that the category
+              answers one question out of three, which is a single point and
+              is made once. The two rows below are the screens that back it,
+              not two more arguments. */}
+          <div className="max-w-3xl">
+            <div className="mb-3"><PainNumber n={BEYOND_N} /></div>
+            <h3 className={`font-clash font-semibold text-2xl sm:text-[30px] leading-tight tracking-[-0.02em] mb-5 ${t.heading(dark)}`}>
+              {BEYOND_REORDER_COPY.title}
+            </h3>
+
+            <Pair
+              body={
+                <>
+                  {BEYOND_REORDER_COPY.lead}{' '}
+                  <span className={`font-semibold ${t.heading(dark)}`}>{BEYOND_REORDER_COPY.leadEmphasis}</span>{' '}
+                  {BEYOND_REORDER_COPY.leadAfter}
+                </>
+              }
+              solution={BEYOND_REORDER_COPY.solution}>
+              <ul className="mt-3 space-y-2">
+                {BEYOND_REORDER_COPY.bullets.map(({ label, text }) => (
+                  <li key={label} className={`flex items-start gap-3 text-[15.5px] leading-[1.6] ${dark ? 'text-white/80' : 'text-[#1A1A1A]/75'}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full shrink-0 mt-[9px] ${dark ? 'bg-[#98CC65]' : 'bg-[#2F7D4F]'}`} />
+                    <span>
+                      <span className={`font-semibold ${t.heading(dark)}`}>{label}</span> — {text}
+                    </span>
+                  </li>
+                ))}
+              </ul>
+            </Pair>
+          </div>
+
+          {/* A row each, with the screen under the words. Two cards side by
+              side could only ever describe these — and a claim this big
+              ("nobody else does either of these") is exactly the one a
+              visitor won't take on trust from a paragraph. */}
+          <div className="mt-10 space-y-10">
+            {BEYOND_REORDER_COPY.items.map(({ key, title, body, href, demoCaption }) => {
+              const Icon = BEYOND_ICONS[key];
+              const Demo = BEYOND_DEMOS[key];
+              return (
+                <div key={key} className={`pt-9 border-t ${dark ? 'border-white/[0.08]' : 'border-[#1A1A1A]/[0.08]'}`}>
+                  <div className="max-w-3xl">
+                    <div className="flex items-center gap-3.5 mb-3">
+                      <span className={`w-10 h-10 rounded-lg flex items-center justify-center shrink-0 ${
+                        dark ? 'bg-[#98CC65]/12 text-[#98CC65]' : 'bg-[#2F7D4F]/10 text-[#2F7D4F]'
+                      }`}>
+                        <Icon className="w-5 h-5" />
+                      </span>
+                      <h4 className={`font-clash font-semibold text-[20px] sm:text-[23px] leading-tight tracking-[-0.02em] ${t.heading(dark)}`}>
+                        {title}
+                      </h4>
+                    </div>
+                    <p className={`text-[16px] leading-[1.6] ${t.muted(dark)}`}>{body}</p>
+                  </div>
+
+                  {/* frozen: the real screen, with nothing to click. The
+                      clickable copy of it is one link away and this row
+                      has an argument to finish. */}
+                  <div className="mt-7">
+                    <Demo interactive={false} />
+                  </div>
+
+                  <div className="mt-4 flex flex-wrap items-start justify-between gap-x-6 gap-y-2">
+                    <p className={`max-w-2xl text-[13px] leading-[1.55] ${dark ? 'text-white/40' : 'text-[#1A1A1A]/40'}`}>
+                      {demoCaption}
+                    </p>
+                    <a href={href}
+                      className={`group inline-flex items-center gap-1.5 text-[13px] font-semibold shrink-0 ${t.green(dark)}`}>
+                      {BEYOND_REORDER_COPY.ctaLabel}
+                      <ArrowRight className="w-3.5 h-3.5 transition-transform group-hover:translate-x-0.5" />
+                    </a>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+
+          <p className={`mt-7 text-[15.5px] font-medium leading-[1.6] ${t.green(dark)}`}>
+            {BEYOND_REORDER_COPY.kicker}
           </p>
-          <LostSalesDemo interactive={false} />
+        </motion.div>
+      </div>
+    </section>
+  );
+}
+
+/* ─── 3b · The bill ───
+   What the problems above already cost, priced. Its own section rather
+   than the last block of the problem section: it isn't a fifth problem,
+   it's the invoice for the four, and a visitor who wants to know what
+   standing still costs should be able to jump straight here from the
+   nav.
+
+   White with a hairline rather than the tinted treatment: How it works
+   and The platform below are both tinted already, and a third tinted
+   band butting onto those two would read as one long grey run.
+
+   LOST_SALES_COPY.lead is the join back up the page — without it this
+   reads as a separate feature pitch instead of the bill for all of it. */
+function Cost({ dark }) {
+  return (
+    <section id="cost" className={`py-24 scroll-mt-24 border-t ${dark ? 'border-white/[0.07]' : 'border-[#1A1A1A]/[0.07]'}`}>
+      <div className="max-w-6xl mx-auto px-6">
+        <motion.div {...fadeUp} transition={{ duration: 0.6, ease }}>
+          {/* the same pill every other section wears, so this reads as a
+              section of the page rather than a block that fell out of the
+              one above — and it repeats the nav label that points here.
+              Amber, matching the problem section it bills for. Centred on
+              its own row rather than by a text-center on the wrapper: the
+              demo panel below is inside this block and sets its own
+              alignment. */}
+          <div className="text-center">
+            <Eyebrow dark={dark} accent="orange">{LOST_SALES_COPY.eyebrow}</Eyebrow>
+          </div>
+          <p className={`text-[13px] font-bold uppercase tracking-[0.16em] text-center mb-3 ${
+            dark ? 'text-white/40' : 'text-[#1A1A1A]/40'
+          }`}>
+            {LOST_SALES_COPY.lead}
+          </p>
+          <h2 className={`font-clash font-semibold text-2xl sm:text-3xl leading-tight tracking-[-0.02em] text-center mb-3 ${t.heading(dark)}`}>
+            {LOST_SALES_COPY.title}
+          </h2>
+          <p className={`text-[17px] text-center max-w-2xl mx-auto mb-10 leading-[1.6] ${t.mutedStrong(dark)}`}>
+            {LOST_SALES_COPY.sub}
+          </p>
+
+          {/* The one live panel on this page. Every other demo up the page is
+              frozen on purpose — mid-argument, a screen that invites clicking
+              costs the reader the thread. This section is the end of the
+              argument rather than a step inside it, so there's nothing left to
+              lose the thread of, and the thing worth doing here (open a
+              product, scroll its chart past Today) can't be done by looking. */}
+          <LostSalesForecastDemo />
+          <p className={`mt-4 text-[13px] text-center ${dark ? 'text-white/40' : 'text-[#1A1A1A]/40'}`}>
+            {LOST_SALES_COPY.caption}
+          </p>
         </motion.div>
 
         {/* The stakes. Theme-independent by design: reproduces the exact rendered
             red used in the demo warnings (#DC2626 at 6% over #F7F8FA → #F5ECEE
             fill, #F0C4C5 border) so dark mode matches instead of turning muddy
             from a translucent red over the dark page. */}
-        <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.2, ease }}
+        <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.1, ease }}
           className="mt-6 rounded-2xl p-6 sm:p-7 flex items-start gap-4"
           style={{ backgroundColor: '#F5ECEE', border: '1px solid #F0C4C5' }}>
           <div className="w-11 h-11 rounded-xl bg-[#DC2626]/15 text-[#DC2626] flex items-center justify-center shrink-0">
@@ -246,7 +590,7 @@ function SetupHelp({ dark }) {
             And if any of it doesn’t fit you — just write to us.
           </h3>
           <p className={`text-[15.5px] leading-[1.65] mb-5 ${t.muted(dark)}`}>
-            Ten minutes is the normal case. If yours isn’t the normal case, that’s a conversation, not a dead end —
+            10 minutes is the normal case. If yours isn’t the normal case, that’s a conversation, not a dead end —
             a real person reads it and we’ll try to make it work for your business. And in the unlikely case that
             we can’t, we’ll tell you straight away, before you’ve moved anything across.
           </p>
@@ -284,7 +628,7 @@ function HowItWorks({ dark }) {
   return (
     <section id="how" className={`py-24 scroll-mt-24 border-y ${dark ? 'bg-[#141618] border-white/5' : 'bg-[#fafafa] border-[#1A1A1A]/5'}`}>
       <div className="max-w-6xl mx-auto px-6">
-        <SectionHead dark={dark} className="mb-14" eyebrow="Setup"
+        <SectionHead dark={dark} className="mb-14" eyebrow="Quick setup w/ AI"
           title="Set up with Claude in 10 minutes."
           sub="No implementation call, no import project. You talk to Claude and DragonRestock does the wiring — and if you’d rather we did it, a real person is ready to onboard you the minute you sign up. Never used Claude? That’s fine, and it’s covered below." />
 
@@ -317,15 +661,6 @@ function HowItWorks({ dark }) {
     </section>
   );
 }
-
-/* ─── 5 · The solution — clear actionables ───
-   The thesis section, and the lead of the whole solution story. It
-   absorbed what used to be a separate "Reorder dates" pillar: that
-   pillar and this section were making the same argument, so the
-   order-by date, the quantity, and the lead-time legs now live in
-   the cards below instead of in a band of their own. */
-const ANSWER_ICONS = { instruction: ListChecks, reasoning: Sparkles, 'next-step': Send };
-const ANSWERS = ANSWERS_COPY.map(a => ({ ...a, icon: ANSWER_ICONS[a.key] }));
 
 /* The platform, in full. Not just the six screens with demos behind
    them — the point of this list is breadth, so a visitor can see how
@@ -376,50 +711,21 @@ function PlatformList({ dark }) {
   );
 }
 
-function Solution({ dark }) {
-  return (
-    <section id="features" className="py-24 scroll-mt-24">
-      <div className="max-w-6xl mx-auto px-6">
-        <SectionHead dark={dark} className="mb-14" eyebrow="Clear actionables"
-          title="It tells you what to do. Not what to look at."
-          sub="Filters, alerts, and reports are just work in a nicer font — every one of them ends with you still having to decide. DragonRestock does the deciding and hands you the instruction: which SKU, how many units, which supplier, and the date the order has to go out." />
-
-        <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.05, ease }} className="mb-4">
-          <RestockBoardDemo />
-        </motion.div>
-        <p className={`text-center text-[13px] mb-10 ${dark ? 'text-white/40' : 'text-[#1A1A1A]/40'}`}>
-          Expand any row to see the quantity justified — lead-time legs, seasonality, and seven windows of velocity.
-        </p>
-
-        <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.1, ease }}
-          className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          {ANSWERS.map(({ icon: Icon, title, body }) => (
-            <div key={title} className={`${t.card(dark)} rounded-2xl p-7`}>
-              <div className={`w-11 h-11 rounded-xl flex items-center justify-center mb-4 ${dark ? 'bg-[#98CC65]/12 text-[#98CC65]' : 'bg-[#2F7D4F]/10 text-[#2F7D4F]'}`}>
-                <Icon className="w-[22px] h-[22px]" />
-              </div>
-              <h3 className={`font-clash font-semibold text-[19px] leading-tight tracking-[-0.01em] mb-2 ${t.heading(dark)}`}>{title}</h3>
-              <p className={`text-[15px] leading-[1.6] ${t.muted(dark)}`}>{body}</p>
-            </div>
-          ))}
-        </motion.div>
-
-      </div>
-    </section>
-  );
-}
-
-/* ─── 6 · The demo hand-off ───
+/* ─── 5 · The demo hand-off ───
    Its own band, on the tinted background with a border top and bottom.
-   The Solution section above ends on the restock board and its three
+   The problem section already ended on the restock board and its three
    cards; this is a separate pitch — here is everything else, and you
    can go and click it — so it needs to read as a separate section
-   rather than as more of the same. */
+   rather than as more of the same.
+
+   Carries id="features" for the nav: the old Solution section held that
+   anchor before its content moved up into problem 03, and this list is
+   what a visitor clicking "Features" is actually after. */
 function DemoTeaser({ dark }) {
   return (
-    <section className={`py-20 border-y ${dark ? 'bg-[#141618] border-white/5' : 'bg-[#fafafa] border-[#1A1A1A]/5'}`}>
+    <section id="features" className={`py-20 scroll-mt-24 border-y ${dark ? 'bg-[#141618] border-white/5' : 'bg-[#fafafa] border-[#1A1A1A]/5'}`}>
       <div className="max-w-6xl mx-auto px-6">
-        <SectionHead dark={dark} className="mb-10" eyebrow="The platform"
+        <SectionHead dark={dark} className="mb-10" eyebrow="Platform features"
           title="Everything running underneath the recommendation."
           sub="That daily action list is one screen. It works because of everything sitting behind it — and the ones marked Demo you can click straight into." />
 
@@ -480,8 +786,8 @@ export default function Restock() {
       <Hero dark={dark} />
       <Authority dark={dark} />
       <Pain dark={dark} />
+      <Cost dark={dark} />
       <HowItWorks dark={dark} />
-      <Solution dark={dark} />
       <DemoTeaser dark={dark} />
 
       <ClosingCTA />

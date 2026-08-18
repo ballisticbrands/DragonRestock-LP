@@ -11,7 +11,7 @@ import Eyebrow from '../components/landing/Eyebrow';
 import SectionHead from '../components/landing/SectionHead';
 import ScreenshotSlot from '../components/landing/ScreenshotSlot';
 import RestockBoardDemo from '../components/landing/RestockBoardDemo';
-import LostSalesDemo from '../components/landing/LostSalesDemo';
+import LostSalesForecastDemo from '../components/landing/LostSalesForecastDemo';
 import ForecastDemo from '../components/landing/ForecastDemo';
 import OrderTrackerDemo from '../components/landing/OrderTrackerDemo';
 import KnowledgeCenterDemo from '../components/landing/KnowledgeCenterDemo';
@@ -41,9 +41,14 @@ import { PILLARS_COPY, DIFFERENTIATORS_COPY } from '../data/restockCopy';
    Copy lives in the JSX-free data module so the build-time prerender can
    emit it (src/data/restockCopy.js); this file attaches the icon, accent
    and live demo component to each entry. Never inline copy here. */
+/* lost-sales runs the forecast panel, not the history-only one. The two
+   said the same thing about the past and only one of them says anything
+   about the next stockout, so LostSalesDemo is off this page — it still
+   renders the landing page's "Why it matters" section, and swapping it
+   back here is a one-word change. */
 const PILLAR_META = {
   restock:      { accent: 'green',  icon: ListChecks,   Component: RestockBoardDemo },
-  'lost-sales': { accent: 'orange', icon: TrendingDown, Component: LostSalesDemo },
+  'lost-sales': { accent: 'orange', icon: TrendingDown, Component: LostSalesForecastDemo },
   forecasting:  { accent: 'orange', icon: LineChart,    Component: ForecastDemo },
   inventory:    { accent: 'green',  icon: Boxes,        Component: OrderTrackerDemo },
   knowledge:    { accent: 'indigo', icon: BookOpen,     Component: KnowledgeCenterDemo },
@@ -81,8 +86,10 @@ function PillarBand({ dark, pillar, flip }) {
     ? (flip ? 'md:grid-cols-[1.5fr_1fr]' : 'md:grid-cols-[1fr_1.5fr]')
     : 'md:grid-cols-2';
 
+  // `large` is read by the demos that carry a written explanation panel —
+  // those are read as prose, so they run at reading size, not UI size.
   const visual = Component
-    ? <Component dark={dark} />
+    ? <Component dark={dark} large />
     : <ScreenshotSlot dark={dark} accent={accent} icon={icon} label={shot} ratio={wide ? '16 / 9' : '4 / 3'} />;
 
   // Full-width layout — text block on top, wide visual below (flagship pillar).
@@ -223,7 +230,7 @@ function Differentiator({ dark, id, accent, eyebrow, title, body, bullets, shot,
         <motion.div {...fadeUp} transition={{ duration: 0.6, delay: 0.1, ease }}>
           {integrations && <IntegrationStrip dark={dark} groups={integrations} />}
           {Component
-            ? <Component dark={dark} />
+            ? <Component dark={dark} large />
             : <ScreenshotSlot dark={dark} accent={accent} icon={shot.icon} label={shot.label} src={src} alt={shot.label} ratio="16 / 10" />}
         </motion.div>
       </div>
@@ -244,7 +251,7 @@ const KNOBS = [
   { icon: Layers, title: 'Per-SKU overrides', desc: 'Override any assumption on any SKU without breaking the model.' },
   { icon: Globe, title: 'Marketplace-level config', desc: 'Different rules for different regions and brands.' },
   { icon: Building2, title: 'Supplier-level settings', desc: 'MOQs, case packs, payment terms, and lead time per supplier.' },
-  { icon: TrendingDown, title: 'Stockout-adjusted velocity', desc: 'Days you were dark never drag your baseline down.' },
+  { icon: TrendingDown, title: 'Stockout-adjusted velocity', desc: 'Days you were out of stock never drag your baseline down.' },
   { icon: Gauge, title: 'FBA restock limits & IPI', desc: 'Recommendations that respect the space Amazon actually gives you.' },
   { icon: ArrowLeftRight, title: 'Warehouse transfers', desc: 'Plan 3PL → FBA send-ins, not just supplier orders.' },
   { icon: Container, title: 'Container & pallet planning', desc: 'Fill the container without over-ordering the wrong SKU.' },

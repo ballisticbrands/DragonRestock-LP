@@ -72,11 +72,12 @@ const GROUPS = [
         windows: [33.1, 35.8, 37.4, 39.2, 40.6, 42.3, 44.9],
         order: { qty: 1200, by: 'Aug 11' },
         chips: [
+          { text: 'Prime Day excluded', kind: 'ai' },
           { text: 'Q4 lift 1.6×', kind: 'ai' },
           { text: 'Container fill', kind: 'rule' },
         ],
         why: {
-          qty: '980 units covers demand to the Q4 lift. Rounded to 1,200 to fill the container — the extra 220 ship for free.',
+          qty: 'Units tripled between July 23 and July 26 — that was Prime Day, not a change in demand, so it’s out of the baseline and the forecast runs on the 42.3/day trend either side of it. Ordering against the spike would have put roughly 900 units of dead stock into Q4. 980 units covers demand to the Q4 lift; rounded to 1,200 to fill the container — the extra 220 ship for free.',
           season: 'Q4 multiplier 1.6× from Oct 12',
         },
       },
@@ -152,16 +153,11 @@ const GROUPS = [
   },
 ];
 
-const ALL_ROWS = GROUPS.flatMap(g => g.rows);
-const countOf = (key) => ALL_ROWS.filter(r => r.urgency === key).length;
-
-const TABS = [
-  { label: 'All', count: ALL_ROWS.length },
-  { label: 'Critical', urgency: 'critical', count: countOf('critical') },
-  { label: 'Warning', urgency: 'warning', count: countOf('warning') },
-  { label: 'OK', urgency: 'ok', count: countOf('ok') },
-  { label: 'No sales', urgency: 'nosales', count: countOf('nosales') },
-];
+/* The `short` cut for the landing page: two Lianfa rows and the Dongfeng
+   row carrying the Chinese New Year shutdown — enough to play with, and
+   enough to show both AI reasoning and a hard supplier constraint, without
+   the full six-row board the /demo walkthrough gets. */
+const SHORT_SKUS = ['SHIRT-RED-M', 'SHIRT-BLU-L', 'HAT-BLK-OS'];
 
 const WINDOW_LABELS = ['180d', '90d', '60d', '30d', '15d', '7d', '2d'];
 
@@ -169,7 +165,6 @@ const GRID =
   'grid items-center gap-2 ' +
   'grid-cols-[24px_20px_104px_190px_142px_minmax(72px,1fr)_minmax(96px,1.3fr)_minmax(60px,1fr)_minmax(60px,1fr)_minmax(50px,1fr)_minmax(62px,1fr)]';
 
-const orderableRows = GROUPS.flatMap(g => g.rows.filter(r => r.order).map(r => r.sku));
 const lineValue = (row) => row.order.qty * bySku[row.sku].cogs;
 
 function Checkbox({ checked, indeterminate, onChange, label }) {
@@ -258,37 +253,42 @@ function StatTile({ label, value, valueColor = '#1A1A1A', accent }) {
   );
 }
 
-function Why({ row }) {
+/* `large` matches the type scale ForecastDemo uses on the landing page, so
+   the two "Why this quantity" panels read the same size when a visitor
+   meets them a screen apart. The board's own row chrome stays at UI scale
+   either way — it's only the reasoning panel that has to be readable in
+   passing. */
+function Why({ row, large }) {
   return (
     <motion.div
       initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
       transition={{ duration: 0.28, ease }} className="overflow-hidden"
     >
-      <div className="mx-2 mb-2.5 rounded-xl p-3.5"
+      <div className={`mx-2 mb-2.5 rounded-xl ${large ? 'p-5' : 'p-3.5'}`}
         style={{ backgroundColor: 'rgba(91,91,214,0.045)', border: '1px solid rgba(91,91,214,0.14)' }}>
-        <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wide mb-2.5" style={{ color: C.indigo }}>
-          <Sparkles className="w-3 h-3" /> Why this quantity
+        <div className={`flex items-center gap-1.5 font-bold uppercase tracking-wide ${large ? 'text-[11.5px] mb-3' : 'text-[9px] mb-2.5'}`} style={{ color: C.indigo }}>
+          <Sparkles className={large ? 'w-3.5 h-3.5' : 'w-3 h-3'} /> Why this quantity
         </div>
-        <p className="text-[10.5px] leading-relaxed text-[#1A1A1A]/70 mb-3">{row.why.qty}</p>
+        <p className={`leading-relaxed text-[#1A1A1A]/70 ${large ? 'text-[15px] mb-4' : 'text-[10.5px] mb-3'}`}>{row.why.qty}</p>
 
-        <div className="flex flex-wrap gap-1.5 mb-3.5">
-          <span className="rounded-md bg-white px-2 py-1 text-[9px] border border-[#1A1A1A]/8">
+        <div className={`flex flex-wrap gap-1.5 ${large ? 'mb-4' : 'mb-3.5'}`}>
+          <span className={`rounded-md bg-white border border-[#1A1A1A]/8 ${large ? 'px-2.5 py-1.5 text-[11.5px]' : 'px-2 py-1 text-[9px]'}`}>
             <span className="text-[#1A1A1A]/40 font-semibold">Lead time </span>
             <span className="text-[#1A1A1A]/75 font-medium">{LEAD_LEGS}</span>
           </span>
-          <span className="rounded-md bg-white px-2 py-1 text-[9px] border border-[#1A1A1A]/8">
+          <span className={`rounded-md bg-white border border-[#1A1A1A]/8 ${large ? 'px-2.5 py-1.5 text-[11.5px]' : 'px-2 py-1 text-[9px]'}`}>
             <span className="text-[#1A1A1A]/40 font-semibold">Seasonality </span>
             <span className="text-[#1A1A1A]/75 font-medium">{row.why.season}</span>
           </span>
         </div>
 
         {/* the seven-window velocity grid — available, not mandatory */}
-        <div className="text-[8.5px] font-bold uppercase tracking-wide text-[#1A1A1A]/40 mb-1.5">Past daily sales velocity</div>
+        <div className={`font-bold uppercase tracking-wide text-[#1A1A1A]/40 ${large ? 'text-[10.5px] mb-2' : 'text-[8.5px] mb-1.5'}`}>Past daily sales velocity</div>
         <div className="grid grid-cols-7 gap-1">
           {row.windows.map((v, i) => (
-            <div key={WINDOW_LABELS[i]} className="rounded-md bg-white border border-[#1A1A1A]/8 px-1 py-1.5 text-center">
-              <div className="text-[8px] font-semibold text-[#1A1A1A]/35">{WINDOW_LABELS[i]}</div>
-              <div className="text-[11px] font-semibold tabular-nums text-[#1A1A1A]/80">{v.toFixed(1)}</div>
+            <div key={WINDOW_LABELS[i]} className={`rounded-md bg-white border border-[#1A1A1A]/8 text-center ${large ? 'px-1.5 py-2' : 'px-1 py-1.5'}`}>
+              <div className={`font-semibold text-[#1A1A1A]/35 ${large ? 'text-[10px]' : 'text-[8px]'}`}>{WINDOW_LABELS[i]}</div>
+              <div className={`font-semibold tabular-nums text-[#1A1A1A]/80 ${large ? 'text-[13.5px]' : 'text-[11px]'}`}>{v.toFixed(1)}</div>
             </div>
           ))}
         </div>
@@ -297,7 +297,7 @@ function Why({ row }) {
   );
 }
 
-function Row({ row, open, onToggle, checked, onCheck }) {
+function Row({ row, open, onToggle, checked, onCheck, large }) {
   const p = bySku[row.sku];
   const u = URGENCY[row.urgency];
   const total = row.fba + row.inbound + row.offsite;
@@ -383,18 +383,38 @@ function Row({ row, open, onToggle, checked, onCheck }) {
 
       </div>
 
-      <AnimatePresence initial={false}>{open && <Why row={row} />}</AnimatePresence>
+      <AnimatePresence initial={false}>{open && <Why row={row} large={large} />}</AnimatePresence>
     </div>
   );
 }
 
-export default function RestockBoardDemo() {
+export default function RestockBoardDemo({ short = false, large = false }) {
   const [open, setOpen] = useState('SHIRT-RED-M');
   const [tab, setTab] = useState('All');
 
+  /* everything below counts off the rows this instance actually shows, so
+     the tabs, the tiles and the bulk selection all agree in either cut */
+  const boardGroups = short
+    ? GROUPS.map(g => ({ ...g, rows: g.rows.filter(r => SHORT_SKUS.includes(r.sku)) })).filter(g => g.rows.length > 0)
+    : GROUPS;
+  const allRows = boardGroups.flatMap(g => g.rows);
+  const countOf = (key) => allRows.filter(r => r.urgency === key).length;
+  const orderableRows = allRows.filter(r => r.order).map(r => r.sku);
+  const ordered = allRows.filter(r => r.order);
+  const totalQty = ordered.reduce((sum, r) => sum + r.order.qty, 0);
+  const totalValue = ordered.reduce((sum, r) => sum + lineValue(r), 0);
+
+  const TABS = [
+    { label: 'All', count: allRows.length },
+    { label: 'Critical', urgency: 'critical', count: countOf('critical') },
+    { label: 'Warning', urgency: 'warning', count: countOf('warning') },
+    { label: 'OK', urgency: 'ok', count: countOf('ok') },
+    { label: 'No sales', urgency: 'nosales', count: countOf('nosales') },
+  ];
+
   // The tabs filter; the search box is decorative on purpose — it's here to
   // show the affordance, not to be a working search on five rows.
-  const groups = GROUPS
+  const groups = boardGroups
     .map(g => ({ ...g, rows: tab === 'All' ? g.rows : g.rows.filter(r => URGENCY[r.urgency].label === tab) }))
     .filter(g => g.rows.length > 0);
   const [selected, setSelected] = useState(() => new Set(orderableRows));
@@ -429,8 +449,9 @@ export default function RestockBoardDemo() {
       <div className="px-5 grid grid-cols-2 lg:grid-cols-5 gap-2.5">
         <StatTile label="Critical SKUs" value={String(countOf('critical'))} valueColor={C.red} accent="rgba(220,38,38,0.30)" />
         <StatTile label="Warning SKUs" value={String(countOf('warning'))} valueColor="#B45309" accent="rgba(245,158,11,0.35)" />
-        <StatTile label="Total order qty" value="3,300" />
-        <StatTile label="Est. order value" value="$11,990" />
+        <StatTile label="Total order qty" value={totalQty.toLocaleString()} />
+        <StatTile label="Est. order value" value={`$${totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`} />
+        {/* SHIRT-RED-M is in every cut and is always the earliest */}
         <StatTile label="Earliest order by" value="Aug 11" valueColor={C.red} />
       </div>
 
@@ -531,6 +552,7 @@ export default function RestockBoardDemo() {
                       key={r.sku} row={r}
                       open={open === r.sku} onToggle={() => setOpen(open === r.sku ? null : r.sku)}
                       checked={selected.has(r.sku)} onCheck={() => toggleRow(r.sku)}
+                      large={large}
                     />
                   ))}
                 </div>
@@ -545,7 +567,7 @@ export default function RestockBoardDemo() {
         </div>
 
         <div className="flex items-center gap-1.5 mt-2.5 text-[10px] text-[#1A1A1A]/40">
-          <Clock className="w-3 h-3" /> Recalculated this morning · {ALL_ROWS.length} SKUs need a decision · 38 in catalog
+          <Clock className="w-3 h-3" /> Recalculated this morning · {allRows.length} SKUs need a decision · 38 in catalog
         </div>
       </div>
     </div>

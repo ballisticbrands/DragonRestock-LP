@@ -160,11 +160,6 @@ const DOCS = {
   },
 };
 
-/* Completeness bar: one segment per folder-ish slice of the handbook.
-   Green = captured, amber = partial, red = the model knows it's missing. */
-const SEGMENTS = ['g', 'g', 'g', 'g', 'g', 'g', 'g', 'a', 'a', 'a', 'g', 'r', 'g', 'g', 'r', 'a'];
-const SEG_COLOR = { g: '#22C55E', a: '#F59E0B', r: '#F87171' };
-
 function Meta({ label, children, mono }) {
   return (
     <div className="flex flex-col sm:flex-row gap-1 sm:gap-4 py-2 border-b border-[#1A1A1A]/6 last:border-b-0">
@@ -180,18 +175,15 @@ export default function KnowledgeCenterDemo() {
 
   return (
     <div className="w-full rounded-2xl overflow-hidden bg-[#F7F8FA] border border-[#1A1A1A]/10 shadow-2xl shadow-[#1A1A1A]/15 select-none text-left">
-      {/* completeness meter */}
+      {/* completeness readout. No segmented bar under it: sixteen blocks
+          coloured green/amber/red implied a per-segment meaning the demo
+          never had — the folder counts in the tree are the real breakdown. */}
       <div className="px-5 pt-5 pb-3">
-        <div className="flex flex-wrap items-baseline justify-between gap-2 mb-2">
+        <div className="flex flex-wrap items-baseline justify-between gap-2">
           <span className="text-[9.5px] font-bold uppercase tracking-[0.1em] text-[#1A1A1A]/50">
             Memory completeness <span className="text-[#1A1A1A] text-[11px]">79%</span>
           </span>
           <span className="text-[10px] text-[#1A1A1A]/40 tabular-nums">68 / 86 documents captured</span>
-        </div>
-        <div className="flex gap-[3px] h-[7px]">
-          {SEGMENTS.map((seg, i) => (
-            <span key={i} className="flex-1 rounded-[2px]" style={{ backgroundColor: SEG_COLOR[seg] }} />
-          ))}
         </div>
       </div>
 
@@ -260,12 +252,12 @@ export default function KnowledgeCenterDemo() {
       </div>
 
       {/* the point of the whole thing */}
-      <div className="mx-5 mb-5 rounded-xl px-4 py-3 flex items-start gap-2.5"
+      <div className="mx-5 mb-5 rounded-xl px-5 py-4 flex items-start gap-3"
         style={{ backgroundColor: 'rgba(91,91,214,0.05)', border: '1px solid rgba(91,91,214,0.16)' }}>
-        <Sparkles className="w-4 h-4 shrink-0 mt-0.5" style={{ color: C.indigo }} />
-        <p className="text-[10.5px] leading-relaxed text-[#1A1A1A]/65">
+        <Sparkles className="w-5 h-5 shrink-0 mt-0.5" style={{ color: C.indigo }} />
+        <p className="text-[14px] leading-relaxed text-[#1A1A1A]/65">
           <span className="font-bold text-[#1A1A1A]">Priya, your VA, reads the same files you do.</span>{' '}
-          Ask either one when Lianfa shuts for New Year and you get the same answer — and the amber bars up top are
+          Ask either one when Lianfa shuts for New Year and you get the same answer — and the amber counts beside each folder are
           the parts DragonRestock knows are still missing, so it keeps asking until they’re filled in.
         </p>
       </div>

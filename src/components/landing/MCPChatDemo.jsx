@@ -66,7 +66,7 @@ function TypewriterText({ text, onComplete, speed = 12 }) {
   return <span>{displayed}</span>;
 }
 
-function Transcript({ messages }) {
+function Transcript({ messages, compact }) {
   const [visible, setVisible] = useState([]);
   const [index, setIndex] = useState(0);
   const [isTyping, setIsTyping] = useState(false);
@@ -108,7 +108,16 @@ function Transcript({ messages }) {
   };
 
   return (
-    <div ref={scrollRef} className="flex-1 overflow-y-auto p-4 space-y-3 bg-[#fafafa] h-[420px]">
+    /* Compact fills whatever height the row gives it — `flex-1 min-h-0`,
+       safe here only because the parent has a definite height (the grid
+       cell stretches). Without min-h-0 the content-based minimum wins and
+       the window grows with every message instead of scrolling, which is
+       exactly what `flex-1` alone used to do. min-h keeps it sane once the
+       grid collapses to one column and the parent height goes auto. */
+    <div ref={scrollRef}
+      className={`overflow-y-auto space-y-3 bg-[#fafafa] ${
+        compact ? 'p-3.5 flex-1 min-h-[440px]' : 'shrink-0 p-4 h-[420px]'
+      }`}>
       <AnimatePresence>
         {visible.map((msg, i) => (
           <motion.div
@@ -118,7 +127,7 @@ function Transcript({ messages }) {
             transition={{ duration: 0.25 }}
             className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}
           >
-            <div className={`max-w-[82%] px-4 py-2.5 text-[13.5px] leading-relaxed whitespace-pre-line break-words ${
+            <div className={`max-w-[85%] px-4 py-2.5 leading-relaxed whitespace-pre-line break-words ${compact ? 'text-[14px]' : 'text-[13.5px]'} ${
               msg.role === 'user'
                 ? 'bg-[#2F7D4F] text-white rounded-2xl rounded-br-md'
                 : 'bg-[#f0f0f0] text-[#1A1A1A] rounded-2xl rounded-bl-md'
@@ -135,9 +144,16 @@ function Transcript({ messages }) {
   );
 }
 
-export default function MCPChatDemo({ dark }) {
-  const [active, setActive] = useState(CONVERSATIONS[0].key);
-  const convo = CONVERSATIONS.find(c => c.key === active);
+/* `only` pins the component to a single transcript and `compact` shrinks it
+   to something that sits inside a page row — no tab strip, no composer, no
+   caption. That's how the problem section reuses the onboarding transcript
+   as its illustration instead of a separate screenshot that would drift out
+   of sync with this one. */
+export default function MCPChatDemo({ dark, only, compact = false }) {
+  const convos = only ? CONVERSATIONS.filter(c => c.key === only) : CONVERSATIONS;
+  const [active, setActive] = useState(convos[0].key);
+  const convo = convos.find(c => c.key === active) ?? convos[0];
+  const showTabs = convos.length > 1;
 
   const tabOn = 'bg-[#2F7D4F] text-white shadow-lg shadow-[#2F7D4F]/20';
   const tabOff = dark
@@ -145,10 +161,11 @@ export default function MCPChatDemo({ dark }) {
     : 'bg-[#1A1A1A]/[0.04] text-[#1A1A1A]/55 hover:bg-[#1A1A1A]/[0.07] hover:text-[#1A1A1A]/75';
 
   return (
-    <div>
+    <div className={compact ? 'h-full' : ''}>
       {/* Tab strip */}
+      {showTabs && (
       <div className="flex flex-wrap justify-center gap-2 mb-6">
-        {CONVERSATIONS.map(c => (
+        {convos.map(c => (
           <button
             key={c.key}
             type="button"
@@ -159,10 +176,11 @@ export default function MCPChatDemo({ dark }) {
           </button>
         ))}
       </div>
+      )}
 
       {/* Chat client */}
-      <div className="max-w-2xl mx-auto bg-white rounded-xl shadow-2xl shadow-[#1A1A1A]/15 border border-[#1A1A1A]/10 overflow-hidden flex flex-col">
-        <div className="bg-[#0F3D2E] px-5 py-3 flex items-center gap-3">
+      <div className={`bg-white rounded-xl shadow-2xl shadow-[#1A1A1A]/15 border border-[#1A1A1A]/10 overflow-hidden flex flex-col ${compact ? 'h-full' : 'max-w-2xl mx-auto'}`}>
+        <div className={`bg-[#0F3D2E] flex items-center gap-3 ${compact ? 'px-4 py-2.5' : 'px-5 py-3'}`}>
           <div className="flex gap-1.5">
             <div className="w-3 h-3 rounded-full bg-[#ff5f57]" />
             <div className="w-3 h-3 rounded-full bg-[#ffbd2e]" />
@@ -170,19 +188,21 @@ export default function MCPChatDemo({ dark }) {
           </div>
           <div className="flex items-center gap-2 ml-2">
             <img src="/logos/dragonbot_fire.png" alt="" className="w-5 h-5" />
-            <span className="text-white font-clash font-semibold text-sm">Claude · DragonRestock</span>
+            <span className={`text-white font-clash font-semibold ${compact ? 'text-[13px]' : 'text-sm'}`}>Claude · DragonRestock</span>
           </div>
           <div className="ml-auto flex items-center gap-1.5">
             <div className="w-2 h-2 rounded-full bg-[#98CC65] animate-pulse" />
-            <span className="text-[#98CC65] text-xs">MCP connected</span>
+            <span className="text-[#98CC65] text-xs whitespace-nowrap">MCP connected</span>
           </div>
         </div>
 
-        <Transcript key={active} messages={convo.messages} />
+        <Transcript key={active} messages={convo.messages} compact={compact} />
 
         {/* Composer — modeled on Claude's own message box: placeholder on
             top, a "+" bottom-left, model chip and voice controls bottom-right.
-            No send arrow; the box itself is the affordance. */}
+            No send arrow; the box itself is the affordance. Dropped in the
+            compact embed, where the height is worth more than the chrome. */}
+        {!compact && (
         <div className="border-t border-[#1A1A1A]/10 p-3 bg-white">
           <div className="rounded-[20px] border border-[#1A1A1A]/12 bg-white px-4 pt-3 pb-2.5 shadow-sm">
             <div className="text-[#1A1A1A]/35 text-[13.5px] mb-2.5">Write a message…</div>
@@ -200,11 +220,14 @@ export default function MCPChatDemo({ dark }) {
             </div>
           </div>
         </div>
+        )}
       </div>
 
-      <p className={`mt-4 text-center text-[13px] ${dark ? 'text-white/40' : 'text-[#1A1A1A]/40'}`}>
-        {convo.caption}
-      </p>
+      {!compact && (
+        <p className={`mt-4 text-center text-[13px] ${dark ? 'text-white/40' : 'text-[#1A1A1A]/40'}`}>
+          {convo.caption}
+        </p>
+      )}
     </div>
   );
 }

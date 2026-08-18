@@ -326,10 +326,12 @@ function RateLadder({ row }) {
 function Detail({ row }) {
   const plan = row.plan;
   return (
-    <div className="mx-2 mb-2.5 rounded-xl p-3.5"
+    /* the written explanation of the bracket — reading size throughout,
+       the ladder and week strips keep their UI scale */
+    <div className="mx-2 mb-2.5 rounded-xl p-5"
       style={{ backgroundColor: 'rgba(91,91,214,0.045)', border: '1px solid rgba(91,91,214,0.14)' }}>
-      <div className="flex items-center gap-1.5 text-[9px] font-bold uppercase tracking-wide mb-2.5" style={{ color: C.indigo }}>
-        <Sparkles className="w-3 h-3" /> Fee brackets · {row.label} ({row.sub})
+      <div className="flex items-center gap-1.5 text-[11.5px] font-bold uppercase tracking-wide mb-3" style={{ color: C.indigo }}>
+        <Sparkles className="w-3.5 h-3.5" /> Fee brackets · {row.label} ({row.sub})
       </div>
 
       <RateLadder row={row} />
@@ -344,7 +346,7 @@ function Detail({ row }) {
             : (
               <div className="rounded-lg bg-white border border-[#1A1A1A]/10 px-3 py-3 flex items-center gap-2">
                 <ShieldCheck className="w-4 h-4 shrink-0" style={{ color: C.green }} />
-                <span className="text-[10.5px] leading-snug text-[#1A1A1A]/65">
+                <span className="text-[13px] leading-snug text-[#1A1A1A]/65">
                   Cover stays above {THRESHOLD} days on both windows for the whole quarter. No send-in needed.
                 </span>
               </div>
@@ -352,13 +354,13 @@ function Detail({ row }) {
         </div>
       )}
 
-      <p className="text-[10.5px] leading-relaxed text-[#1A1A1A]/70 mt-3">{row.note}</p>
+      <p className="text-[14px] leading-relaxed text-[#1A1A1A]/70 mt-4">{row.note}</p>
 
       {plan && (
-        <div className="mt-2.5 rounded-lg px-3 py-2.5 flex items-start gap-2"
+        <div className="mt-3 rounded-lg px-3.5 py-3 flex items-start gap-2.5"
           style={{ backgroundColor: 'rgba(47,125,79,0.06)', border: '1px solid rgba(47,125,79,0.20)' }}>
-          <Truck className="w-3.5 h-3.5 shrink-0 mt-px" style={{ color: C.green }} />
-          <span className="text-[10.5px] leading-relaxed text-[#1A1A1A]/70">
+          <Truck className="w-4 h-4 shrink-0 mt-px" style={{ color: C.green }} />
+          <span className="text-[14px] leading-relaxed text-[#1A1A1A]/70">
             <span className="font-bold" style={{ color: C.green }}>The send-in: </span>
             ship {plan.units.toLocaleString()} units from the 3PL by {fmtDate(row.sendBy)} and they check in around{' '}
             {fmtDate(addDays(TODAY, plan.arriveDay))}, {TRANSIT} days later. That carries days of supply back over {THRESHOLD}{' '}
@@ -372,7 +374,7 @@ function Detail({ row }) {
       {!row.exempt && (row.inbound.length > 0 || row.standing > 0) && (
         <div className="mt-2 flex flex-wrap items-center gap-x-4 gap-y-1 pl-2.5 border-l-2" style={{ borderColor: 'rgba(91,91,214,0.30)' }}>
           {row.standing > 0 && (
-            <span className="flex items-center gap-1.5 text-[10px] text-[#1A1A1A]/50">
+            <span className="flex items-center gap-1.5 text-[12px] text-[#1A1A1A]/50">
               <Truck className="w-3 h-3 shrink-0" />
               Standing transfer — {row.standing.toLocaleString()} units/wk, against {Math.round(row.v30 * row.season * 7).toLocaleString()} sold
             </span>
@@ -387,7 +389,7 @@ function Detail({ row }) {
       )}
 
       {row.exempt && (
-        <p className="text-[10px] leading-relaxed text-[#1A1A1A]/50 mt-2 pl-2.5 border-l-2" style={{ borderColor: 'rgba(91,91,214,0.30)' }}>
+        <p className="text-[12.5px] leading-relaxed text-[#1A1A1A]/50 mt-2.5 pl-3 border-l-2" style={{ borderColor: 'rgba(91,91,214,0.30)' }}>
           Amazon does not apply the low-inventory fee below {LOW_VOLUME} units a week. This SKU sells{' '}
           {row.weekly.toFixed(1)}, so no bracket applies at any level of cover.
         </p>
@@ -512,11 +514,11 @@ export default function LowInventoryFeeDemo() {
       </div>
 
       <div className="px-5 pb-4">
-        <div className="rounded-xl px-4 py-3" style={{ backgroundColor: 'rgba(37,99,235,0.05)', border: '1px solid rgba(37,99,235,0.16)' }}>
-          <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wide mb-2" style={{ color: '#2563EB' }}>
-            <Info className="w-3 h-3" /> How to read these estimates
+        <div className="rounded-xl px-5 py-4" style={{ backgroundColor: 'rgba(37,99,235,0.05)', border: '1px solid rgba(37,99,235,0.16)' }}>
+          <div className="flex items-center gap-1.5 text-[11.5px] font-bold uppercase tracking-wide mb-2.5" style={{ color: '#2563EB' }}>
+            <Info className="w-3.5 h-3.5" /> How to read these estimates
           </div>
-          <ul className="space-y-1.5 text-[10.5px] leading-relaxed text-[#1A1A1A]/60">
+          <ul className="space-y-2 text-[13.5px] leading-relaxed text-[#1A1A1A]/60">
             <li className="flex gap-2">
               <span className="shrink-0" style={{ color: '#2563EB' }}>•</span>
               Amazon bundles this fee into the FBA fulfilment fee and never itemises it, so what you were charged is
