@@ -382,7 +382,11 @@ function Pain({ dark }) {
               not two more arguments. */}
           <div className="max-w-3xl">
             <div className="mb-3"><PainNumber n={BEYOND_N} /></div>
+            {/* same amber prefix as problems 01–03, so the fourth reads as
+                one more charge against the same tools rather than a change
+                of subject */}
             <h3 className={`font-clash font-semibold text-2xl sm:text-[30px] leading-tight tracking-[-0.02em] mb-5 ${t.heading(dark)}`}>
+              <span className="text-[#B45309]">{BEYOND_REORDER_COPY.prefix}: </span>
               {BEYOND_REORDER_COPY.title}
             </h3>
 

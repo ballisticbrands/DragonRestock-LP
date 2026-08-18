@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LineChart, Info, ArrowRight, AlertTriangle, TrendingDown, ChevronDown, ShieldCheck } from 'lucide-react';
 import { C, ease } from './theme';
 import { bySku, LEAD, LEAD_LEGS } from '../../data/story';
+import Copyable from './Copyable';
 
 /* ──────────────────────────────────────────────────────────────
    LostSalesForecastDemo — "Lost Sales Analysis 2".
@@ -47,6 +48,7 @@ const HIST_DAYS = 270;
 const FCST_DAYS = 100;
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 /* Q4 lift, matching the multipliers the forecasting demo uses. */
 const SEASON = [0.85, 0.80, 0.85, 0.90, 0.95, 1.05, 1.15, 1.00, 1.05, 1.35, 1.65, 1.40];
 const Q4_FROM = new Date(2026, 9, 12);
@@ -256,6 +258,30 @@ function Chart({ m, interactive }) {
   const { row, y, top } = m;
   const ticks = [0, 0.25, 0.5, 0.75, 1].map(f => Math.round(top * f));
 
+  /* Hover, carried over from the first version of this screen: a band of
+     red says you were out, and the only way to ask what a single day of it
+     cost is to point at it. Works on both halves — left of Today it reads
+     the reconstruction, right of it the projection. */
+  const [hover, setHover] = useState(null);
+  const plot = useRef(null);
+  const onMove = (e) => {
+    const box = plot.current?.getBoundingClientRect();
+    if (!box) return;
+    const rel = ((e.clientX - box.left) / box.width) * W;
+    const k = Math.round(((rel - PAD.l) / PLOT) * (N - 1));
+    setHover(k >= 0 && k < N ? k : null);
+  };
+
+  const past = hover != null && hover < HIST_DAYS;
+  const d = hover == null ? null : past ? m.history[hover] : m.forecast[hover - HIST_DAYS];
+  const net = netPerUnit(row.price, row.cogs);
+  /* a low-stock day still sells something — the same 70% shortfall the
+     table prices it at */
+  const lostUnits = !d ? 0
+    : past ? (d.status === 'none' ? d.baseline : d.status === 'low' ? d.baseline * 0.7 : 0)
+    : d.lost;
+  const dotAt = !d ? 0 : past ? d.units : d.sold;
+
   return (
     <div className="bg-white rounded-xl border border-[#1A1A1A]/8 p-3.5">
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
@@ -268,6 +294,9 @@ function Chart({ m, interactive }) {
 
       <div className="relative">
         <div ref={scroller} onScroll={onScroll} className={`overflow-x-auto ${interactive ? '' : 'pointer-events-none'}`}>
+          <div ref={plot} className="relative" style={{ width: W }}
+            onMouseMove={interactive ? onMove : undefined}
+            onMouseLeave={() => setHover(null)}>
           <svg width={W} height={H} viewBox={`0 0 ${W} ${H}`} role="img"
             aria-label={`Daily units for ${row.asin} over the past nine months and forecast for the next ${FCST_DAYS} days, with out-of-stock periods shaded`}>
             {ticks.map(tk => (
@@ -335,7 +364,84 @@ function Chart({ m, interactive }) {
                 {MONTHS[d.date.getMonth()]}
               </text>
             ))}
+
+            {d && (
+              <g>
+                <line x1={x(hover)} x2={x(hover)} y1={PAD.t} y2={H - PAD.b}
+                  stroke={C.indigo} strokeOpacity="0.5" strokeWidth="1" />
+                <circle cx={x(hover)} cy={y(dotAt)} r="3.5"
+                  fill={past ? C.indigo : C.green} stroke="#fff" strokeWidth="1.5" />
+                {!past && (
+                  <circle cx={x(hover)} cy={y(d.demand)} r="3" fill={C.red} stroke="#fff" strokeWidth="1.5" />
+                )}
+              </g>
+            )}
           </svg>
+
+          {/* the tooltip lives inside the scrolling plot, so it stays on the
+              day it belongs to rather than drifting as the chart moves */}
+          {d && (
+            <div className="absolute top-2 pointer-events-none z-10"
+              style={{ left: x(hover), transform: `translateX(${hover > N * 0.62 ? '-104%' : '12px'})` }}>
+              <div className="rounded-xl bg-white border border-[#1A1A1A]/10 shadow-2xl shadow-[#1A1A1A]/15 px-3.5 py-3 w-[232px]">
+                <div className="flex items-center justify-between gap-2 mb-1.5">
+                  <span className="text-[9px] font-bold uppercase tracking-wide text-[#1A1A1A]/45">
+                    {WEEKDAYS[d.date.getDay()]}, {label(d.date)}, {d.date.getFullYear()}
+                  </span>
+                  {!past && (
+                    <span className="text-[8px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded shrink-0"
+                      style={{ color: C.indigo, backgroundColor: 'rgba(91,91,214,0.10)' }}>
+                      Projected
+                    </span>
+                  )}
+                </div>
+
+                <div className="flex items-baseline gap-1.5">
+                  <span className="font-clash font-semibold text-[22px] leading-none text-[#1A1A1A]">
+                    {Math.round(past ? d.units : d.sold)}
+                  </span>
+                  <span className="text-[11px] text-[#1A1A1A]/50">{past ? 'units sold' : 'units you can ship'}</span>
+                </div>
+                <div className="flex items-baseline gap-1.5 mt-1 mb-2">
+                  <span className="text-[12px] font-semibold italic text-[#1A1A1A]/70">
+                    {(past ? d.baseline : d.demand).toFixed(1)}
+                  </span>
+                  <span className="text-[10px] text-[#1A1A1A]/40">
+                    {past ? 'expected baseline' : 'forecast demand'}
+                  </span>
+                </div>
+
+                {lostUnits <= 0 ? (
+                  <div className="rounded-md px-2 py-1.5 text-[10px] font-semibold"
+                    style={{ backgroundColor: 'rgba(47,125,79,0.09)', color: C.green }}>
+                    {past ? 'In stock — nothing lost' : 'Covered — nothing lost'}
+                  </div>
+                ) : (
+                  <>
+                    <div className="flex items-center gap-1.5 rounded-md px-2 py-1.5 text-[10px] font-semibold"
+                      style={past && d.status === 'low'
+                        ? { backgroundColor: 'rgba(245,158,11,0.16)', color: '#B45309' }
+                        : { backgroundColor: 'rgba(220,38,38,0.09)', color: C.red }}>
+                      <AlertTriangle className="w-3 h-3 shrink-0" />
+                      {past
+                        ? `${d.status === 'low' ? 'Low stock' : 'Out of stock'} — lost ${money(lostUnits * row.price)}`
+                        : `Out of stock — ${money(lostUnits * row.price)} you can’t fill`}
+                    </div>
+                    <div className="mt-1 rounded-md px-2 py-1.5 text-[10px] font-semibold"
+                      style={{ backgroundColor: 'rgba(47,125,79,0.09)', color: C.green }}>
+                      {past ? 'Profit lost' : 'Profit at risk'}: {money(lostUnits * net)}
+                    </div>
+                    {!past && (
+                      <div className="mt-1.5 text-[9.5px] leading-snug text-[#1A1A1A]/45">
+                        {Math.round(d.demand)} units of demand, {Math.round(d.sold)} in stock — PO {row.po.ref} lands {label(m.arrivalDate)}.
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          )}
+          </div>
         </div>
 
         {/* the invitation, over the right edge until the forecast is on screen */}
@@ -426,7 +532,12 @@ function Row({ m, open, onToggle, interactive }) {
           <span className="min-w-0">
             <span className="block text-[11.5px] font-semibold text-[#1A1A1A]/85 truncate">{row.title}</span>
             <span className="block text-[9.5px] text-[#1A1A1A]/40 truncate">
-              <span style={{ color: C.indigo }}>{row.asin}</span> · {row.skus.join(' · ')}
+              <span style={{ color: C.indigo }}>
+                <Copyable value={row.asin} kind="ASIN">{row.asin}</Copyable>
+              </span>
+              {row.skus.map(s => (
+                <span key={s}> · <Copyable value={s} kind="SKU">{s}</Copyable></span>
+              ))}
             </span>
           </span>
         </span>

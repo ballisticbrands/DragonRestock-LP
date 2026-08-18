@@ -1,8 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ChevronDown, AlertCircle, Info } from 'lucide-react';
 import { C, ease } from './theme';
 import { bySku } from '../../data/story';
+import Copyable from './Copyable';
 
 /* ──────────────────────────────────────────────────────────────
    ForecastDemo — one restock row, zoomed in, with its reasoning open.
@@ -63,14 +64,23 @@ const DAILY = (() => {
 
 const fmtDay = (d) => `${MONTHS[d.getMonth()]} ${d.getDate()}`;
 const fmtMonth = (d) => `${MONTHS[d.getMonth()]} ${String(d.getFullYear()).slice(2)}`;
+/* the tooltip's own format — full year, because a bucket read on hover has
+   no axis around it to borrow the year from */
+const fmtFull = (d) => `${MONTHS[d.getMonth()]} ${d.getDate()} ${d.getFullYear()}`;
+const spanOf = (mode, b) =>
+  mode === 'Daily' ? fmtFull(b.from)
+  : mode === 'Weekly' ? `${fmtFull(b.from)} – ${fmtFull(b.to)}`
+  : `${MONTHS[b.from.getMonth()]} ${b.from.getFullYear()}`;
 
-/* Aggregations. Each returns { label, v, future, prime } buckets. */
+/* Aggregations. Each returns { label, v, future, prime, from, to } buckets;
+   `from`/`to` are the days the bucket actually covers. */
 function aggregate(mode) {
   if (mode === 'Daily') {
     const from = TODAY - 89, to = TODAY + 60;
     return DAILY.filter(d => d.i >= from && d.i <= to).map(d => ({
       label: fmtDay(d.date), v: d.v, future: d.future,
       prime: d.i >= PRIME_FROM && d.i <= PRIME_TO,
+      from: d.date, to: d.date,
     }));
   }
   if (mode === 'Weekly') {
@@ -82,6 +92,7 @@ function aggregate(mode) {
         v: week.reduce((n, d) => n + d.v, 0),
         future: week[0].i > TODAY,
         prime: week.some(d => d.i >= PRIME_FROM && d.i <= PRIME_TO),
+        from: week[0].date, to: week[week.length - 1].date,
       });
     }
     return out;
@@ -89,8 +100,9 @@ function aggregate(mode) {
   const byMonth = new Map();
   DAILY.forEach(d => {
     const k = `${d.date.getFullYear()}-${d.date.getMonth()}`;
-    const cur = byMonth.get(k) ?? { label: fmtMonth(d.date), v: 0, future: d.future, prime: false };
+    const cur = byMonth.get(k) ?? { label: fmtMonth(d.date), v: 0, future: d.future, prime: false, from: d.date, to: d.date };
     cur.v += d.v;
+    cur.to = d.date;
     cur.prime = cur.prime || (d.i >= PRIME_FROM && d.i <= PRIME_TO);
     byMonth.set(k, cur);
   });
@@ -102,6 +114,12 @@ const W = 900, H = 230, PAD = { l: 38, r: 10, t: 14, b: 34 };
 
 function Chart({ mode }) {
   const data = useMemo(() => aggregate(mode), [mode]);
+  /* Hover reads the bucket under the cursor and names the window it covers
+     — a point on a weekly chart is seven days, and "4" on its own doesn't
+     say four of what, when. Modelled on the real screen: the range on top,
+     the number under it, and the series it came from in the label. */
+  const [hover, setHover] = useState(null);
+  const box = useRef(null);
   const max = Math.max(...data.map(d => d.v));
   const step = Math.pow(10, Math.floor(Math.log10(max))) / 2;
   const top = Math.ceil(max / step) * step;
@@ -116,7 +134,22 @@ function Chart({ mode }) {
   const ticks = [0, 0.25, 0.5, 0.75, 1].map(f => Math.round(top * f));
   const labelEvery = Math.ceil(data.length / 9);
 
+  /* the svg is scaled to fit its column, so the cursor has to be mapped
+     back through the rendered width rather than read in viewBox units */
+  const onMove = (e) => {
+    const r = box.current?.getBoundingClientRect();
+    if (!r) return;
+    const rel = ((e.clientX - r.left) / r.width) * W;
+    const i = Math.round(((rel - PAD.l) / (W - PAD.l - PAD.r)) * (data.length - 1));
+    setHover(i >= 0 && i < data.length ? i : null);
+  };
+
+  const h = hover == null ? null : data[hover];
+  /* a point in the top third has no room for a tooltip above it */
+  const above = h ? y(h.v) > H * 0.34 : true;
+
   return (
+    <div ref={box} className="relative" onMouseMove={onMove} onMouseLeave={() => setHover(null)}>
     <svg viewBox={`0 0 ${W} ${H}`} className="w-full h-auto" role="img"
       aria-label={`${mode} sales history for ${SKU}, with the Prime Day window excluded from the forecast baseline`}>
       {/* gridlines */}
@@ -153,7 +186,45 @@ function Chart({ mode }) {
       {data.map((d, i) => (i % labelEvery === 0 ? (
         <text key={i} x={x(i)} y={H - PAD.b + 14} textAnchor="middle" fontSize="8.5" fill="#1A1A1A" fillOpacity="0.35">{d.label}</text>
       ) : null))}
+
+      {/* the hovered point, haloed the way the real screen does it */}
+      {h && (
+        <g>
+          <circle cx={x(hover)} cy={y(h.v)} r="7" fill={h.future ? C.green : '#2563EB'} fillOpacity="0.18" />
+          <circle cx={x(hover)} cy={y(h.v)} r="3.5" fill={h.future ? C.green : '#2563EB'} stroke="#fff" strokeWidth="1.5" />
+        </g>
+      )}
     </svg>
+
+    {h && (
+      /* anchored to the point itself, not to the panel: `top` tracks the
+         value. Sits above the point unless the point is already high in the
+         chart, where an upward tooltip would be clipped by the panel — then
+         it drops underneath and the pointer flips with it. */
+      <div className="absolute pointer-events-none z-10"
+        style={{
+          left: `${(x(hover) / W) * 100}%`,
+          top: `${(y(h.v) / H) * 100}%`,
+          transform: above ? 'translate(-50%, calc(-100% - 12px))' : 'translate(-50%, 12px)',
+        }}>
+        <div className="rounded-md bg-white border border-[#1A1A1A]/15 shadow-lg shadow-[#1A1A1A]/10 whitespace-nowrap">
+          <div className="px-3 py-1.5 text-[10.5px] text-[#1A1A1A]/70 border-b border-[#1A1A1A]/10">
+            {spanOf(mode, h)}
+          </div>
+          <div className="px-3 py-2 flex items-baseline gap-3">
+            <span className="text-[10.5px] text-[#1A1A1A]/60">
+              {h.future ? 'Future Predicted Velocity:' : 'Past Sales:'}
+            </span>
+            <span className="text-[12.5px] font-bold tabular-nums text-[#1A1A1A]">{h.v}</span>
+          </div>
+        </div>
+        {/* the little pointer, so the box is tied to its own point */}
+        <span className={`absolute left-1/2 -translate-x-1/2 w-2 h-2 rotate-45 bg-white ${
+          above ? 'top-full -translate-y-1/2 border-r border-b' : 'bottom-full translate-y-1/2 border-l border-t'
+        } border-[#1A1A1A]/15`} />
+      </div>
+    )}
+    </div>
   );
 }
 
@@ -198,7 +269,9 @@ export default function ForecastDemo({ interactive = true, large = false }) {
           </span>
           <span className="min-w-0">
             <span className="flex items-center gap-2">
-              <span className="text-[15px] font-bold text-[#1A1A1A]">{SKU}</span>
+              <span className="text-[15px] font-bold text-[#1A1A1A]">
+                <Copyable value={SKU} kind="SKU">{SKU}</Copyable>
+              </span>
               <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-bold"
                 style={{ color: C.red, backgroundColor: 'rgba(220,38,38,0.10)' }}>
                 <AlertCircle className="w-2.5 h-2.5" />Critical

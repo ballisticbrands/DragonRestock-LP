@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, Users, ChevronDown, AlertCircle, Clock, Sparkles, Check, Minus, Info } from 'lucide-react';
 import { C, ease } from './theme';
 import { SUPPLIERS, bySku } from '../../data/story';
+import Copyable from './Copyable';
 
 /* ──────────────────────────────────────────────────────────────
    RestockBoardDemo — the Restock Recommendations page.
@@ -334,9 +335,13 @@ function Row({ row, open, onToggle, checked, onCheck, large }) {
             <img src={p.img} alt="" className="w-6 h-6" />
           </span>
           <span className="min-w-0">
-            <span className="block text-[11.5px] font-semibold text-[#1A1A1A]/85 truncate">{row.sku}</span>
+            <span className="block text-[11.5px] font-semibold text-[#1A1A1A]/85 truncate">
+              <Copyable value={row.sku} kind="SKU">{row.sku}</Copyable>
+            </span>
             <span className="block text-[9.5px] text-[#1A1A1A]/45 truncate">{p.name}</span>
-            <span className="block text-[9px] font-medium truncate" style={{ color: '#2563EB' }}>{row.asin}</span>
+            <span className="block text-[9px] font-medium truncate" style={{ color: '#2563EB' }}>
+              <Copyable value={row.asin} kind="ASIN">{row.asin}</Copyable>
+            </span>
           </span>
         </div>
 

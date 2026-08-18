@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { ChevronDown, Info, AlertTriangle, ShieldCheck, Truck, Sparkles, Clock } from 'lucide-react';
 import { C, ease } from './theme';
 import { bySku } from '../../data/story';
+import Copyable from './Copyable';
 
 /* ──────────────────────────────────────────────────────────────
    LowInventoryFeeDemo — "Low-Inventory Fee Forecast".
@@ -426,8 +427,12 @@ function Row({ row, open, onToggle }) {
           </span>
           <span className="min-w-0">
             <span className="block text-[11px] font-medium text-[#1A1A1A]/85 truncate leading-snug">{row.title}</span>
-            <span className="block text-[10px] font-medium truncate" style={{ color: '#2563EB' }}>{row.asin}</span>
-            <span className="block text-[9px] text-[#1A1A1A]/35 truncate font-mono">{row.sku}</span>
+            <span className="block text-[10px] font-medium truncate" style={{ color: '#2563EB' }}>
+              <Copyable value={row.asin} kind="ASIN">{row.asin}</Copyable>
+            </span>
+            <span className="block text-[9px] text-[#1A1A1A]/35 truncate font-mono">
+              <Copyable value={row.sku} kind="SKU">{row.sku}</Copyable>
+            </span>
           </span>
         </span>
 

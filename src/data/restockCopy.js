@@ -119,7 +119,10 @@ export const PAINS_COPY = [
  * Kept as a band rather than a fourth card because it carries two products
  * (liquidation and cashflow) and needs the room to name both. */
 export const BEYOND_REORDER_COPY = {
-  title: 'And reordering is only a third of the job',
+  /* `prefix` matches problems 01–03: the amber "Competitors:" that labels
+   * the whole card as being about the tools the visitor pays for today. */
+  prefix: 'Competitors',
+  title: 'Reordering is all they do, and it’s a third of the job',
   /* `lead` renders with its last clause bold — the one question the whole
    * category answers — so the two it ignores land as a contrast. */
   lead: 'Every tool in this category answers one question:',

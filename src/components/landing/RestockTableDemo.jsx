@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, AlertTriangle, ChevronDown } from 'lucide-react';
 import { C, ease } from './theme';
 import { SUPPLIERS, bySku } from '../../data/story';
+import Copyable from './Copyable';
 
 /* ──────────────────────────────────────────────────────────────
    RestockTableDemo — the hero product visual.
@@ -149,7 +150,9 @@ export default function RestockTableDemo() {
                 <span className="flex items-center gap-2.5 min-w-0">
                   <img src={p.img} alt="" className="w-7 h-7 shrink-0" />
                   <span className="min-w-0">
-                    <span className="block font-semibold text-[#1A1A1A]/85 truncate">{r.sku}</span>
+                    <span className="block font-semibold text-[#1A1A1A]/85 truncate">
+                      <Copyable value={r.sku} kind="SKU">{r.sku}</Copyable>
+                    </span>
                     <span className="block text-[9.5px] text-[#1A1A1A]/40 truncate">{p.name} · {supplier.name}</span>
                   </span>
                 </span>

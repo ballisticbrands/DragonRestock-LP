@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Search, TrendingUp, Info, Calendar, ChevronDown, AlertCircle, LineChart } from 'lucide-react';
 import { C, ease } from './theme';
 import { bySku } from '../../data/story';
+import Copyable from './Copyable';
 
 /* ──────────────────────────────────────────────────────────────
    LostSalesDemo — "Lost Sales Analysis".
@@ -352,10 +353,17 @@ function Row({ row, open, onToggle, label, interactive }) {
           <span className="min-w-0">
             <span className="block text-[11.5px] font-medium text-[#1A1A1A]/85 truncate">{row.title}</span>
             <span className="block text-[10px] font-medium truncate" style={{ color: '#2563EB' }}>
-              {row.asin}
+              <Copyable value={row.asin} kind="ASIN">{row.asin}</Copyable>
               <span className="text-[#1A1A1A]/35 font-normal"> · {row.skus.length} SKU{row.skus.length > 1 ? 's' : ''}</span>
             </span>
-            <span className="block text-[9px] text-[#1A1A1A]/35 truncate font-mono">{row.skus.join('  ·  ')}</span>
+            <span className="block text-[9px] text-[#1A1A1A]/35 truncate font-mono">
+              {row.skus.map((s, i) => (
+                <span key={s}>
+                  {i > 0 && '  ·  '}
+                  <Copyable value={s} kind="SKU">{s}</Copyable>
+                </span>
+              ))}
+            </span>
           </span>
         </span>
 

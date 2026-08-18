@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { Sparkles, ChevronDown, TrendingUp, Info, Clock, Flame, AlertTriangle } from 'lucide-react';
 import { C, ease } from './theme';
 import { bySku } from '../../data/story';
+import Copyable from './Copyable';
 
 /* ──────────────────────────────────────────────────────────────
    LiquidationDemo — the aging-stock decision board.
@@ -246,7 +247,9 @@ function Row({ row, open, onToggle, interactive }) {
           </span>
           <span className="min-w-0">
             <span className="flex items-center gap-1.5">
-              <span className="text-[11.5px] font-semibold text-[#1A1A1A]/85 truncate">{row.sku}</span>
+              <span className="text-[11.5px] font-semibold text-[#1A1A1A]/85 truncate">
+                <Copyable value={row.sku} kind="SKU">{row.sku}</Copyable>
+              </span>
               {sev && (
                 <span className="px-1.5 py-0.5 rounded text-[8.5px] font-bold whitespace-nowrap shrink-0"
                   style={{ color: sev.color, backgroundColor: sev.bg }}>{sev.label}</span>

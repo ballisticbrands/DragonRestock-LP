@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion';
 import { LayoutGrid, Columns3, CalendarDays, Sparkles, Check, X, Search, Factory, Ship, Warehouse, PackageCheck } from 'lucide-react';
 import { C, ease } from './theme';
 import { SUPPLIERS, bySku } from '../../data/story';
+import Copyable from './Copyable';
 
 /* ──────────────────────────────────────────────────────────────
    OrderTrackerDemo — every purchase order, deposit to check-in.
@@ -126,7 +127,9 @@ function ReconcileCard({ item }) {
         <div className="flex items-center gap-2.5">
           <Thumb sku={item.sku} />
           <span className="min-w-0">
-            <span className="block text-[11px] font-semibold text-[#1A1A1A]/85 truncate">{item.sku}</span>
+            <span className="block text-[11px] font-semibold text-[#1A1A1A]/85 truncate">
+              <Copyable value={item.sku} kind="SKU">{item.sku}</Copyable>
+            </span>
             <span className="block text-[9.5px] text-[#1A1A1A]/45">
               {item.units.toLocaleString()} units received · {item.arrived}
             </span>
@@ -185,7 +188,9 @@ function POCard({ po }) {
           <div key={it.sku} className="flex items-center gap-2.5">
             <Thumb sku={it.sku} box="w-8 h-8" size="w-5 h-5" />
             <span className="min-w-0 flex-1">
-              <span className="block text-[10.5px] font-semibold text-[#1A1A1A]/80 truncate">{it.sku}</span>
+              <span className="block text-[10.5px] font-semibold text-[#1A1A1A]/80 truncate">
+                <Copyable value={it.sku} kind="SKU">{it.sku}</Copyable>
+              </span>
               <span className="block text-[9px] text-[#1A1A1A]/40 tabular-nums">{it.units.toLocaleString()} units</span>
             </span>
           </div>
@@ -254,7 +259,9 @@ function GridView() {
                 {po.items.map(it => (
                   <span key={it.sku} className="flex items-center gap-2 min-w-0">
                     <Thumb sku={it.sku} box="w-6 h-6" size="w-4 h-4" />
-                    <span className="text-[10px] text-[#1A1A1A]/70 truncate">{it.sku}</span>
+                    <span className="text-[10px] text-[#1A1A1A]/70 truncate">
+                      <Copyable value={it.sku} kind="SKU">{it.sku}</Copyable>
+                    </span>
                     <span className="text-[9px] text-[#1A1A1A]/35 tabular-nums shrink-0">{it.units.toLocaleString()}</span>
                   </span>
                 ))}

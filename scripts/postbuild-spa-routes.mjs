@@ -80,7 +80,7 @@ const LANDING_SECTIONS = [
         ...(p.key === 'actionables' ? ANSWERS_COPY.map(a => `${a.title}. ${a.body}`) : []),
       ]),
     ] },
-  { h: BEYOND_REORDER_COPY.title, items: [
+  { h: `${BEYOND_REORDER_COPY.prefix}: ${BEYOND_REORDER_COPY.title}`, items: [
       `${BEYOND_REORDER_COPY.lead} ${BEYOND_REORDER_COPY.leadEmphasis} ${BEYOND_REORDER_COPY.leadAfter}`,
       `DragonRestock: ${BEYOND_REORDER_COPY.solution}`,
       ...BEYOND_REORDER_COPY.bullets.map(b => `${b.label} — ${b.text}`),
