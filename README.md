@@ -20,7 +20,7 @@ app, so the funnel reads end to end. All three are separate from every sibling b
 Snippets live in [`index.html`](index.html) `<head>`; event wiring is in
 [`src/lib/track.js`](src/lib/track.js).
 
-## Two things that will bite you
+## Three things that will bite you
 
 **Routes must be prerendered.** `npm run build` runs
 [`scripts/postbuild-spa-routes.mjs`](scripts/postbuild-spa-routes.mjs), which writes a
@@ -28,7 +28,17 @@ static `index.html` per route with real content — without it GitHub Pages serv
 404 fallback (HTTP 404) and Google Ads scores landing-page experience BELOW_AVERAGE. A
 route added to `src/App.jsx` but not to that script's `meta` map ships as a soft 404. The
 script **fails the build** if any ad/SEO route falls under 120 crawler-visible words;
-raise `MIN_WORDS`, never lower it.
+raise `MIN_WORDS`, never lower it. It also fails the build if any route's meta description
+isn't its own — every route shipped the homepage's description until Aug 2026, because the
+tag that removed the shell's copy was matching the freshly-injected one instead.
+
+**Comparison pages are data, not pages.** All five `/compare/<competitor>` routes
+render from one template ([`src/pages/Compare.jsx`](src/pages/Compare.jsx)) over entries in
+[`src/data/compareCopy.js`](src/data/compareCopy.js). A new competitor starts at
+`live: false`, which keeps it out of the footer AND out of the prerender together — flip it
+only once the copy is written, or the footer links a route that GitHub Pages serves as a 404.
+Every price claim carries a dated `sources` line; they go stale, so re-check before spending
+on ads against them.
 
 **Event names are never prefixed per product.** `cta_click`, not
 `dragonrestock_cta_click`. Each product has its own GA4 property and Meta dataset, so

@@ -43,6 +43,7 @@ import {
   PLATFORM_COPY, PILLARS_COPY, DIFFERENTIATORS_COPY, PRICING_FAQS,
 } from '../src/data/restockCopy.js';
 import { PLANS, INCLUDED, TRIAL } from '../src/data/plans.js';
+import { LIVE_COMPARISONS } from '../src/data/compareCopy.js';
 import { SIGNUP_URL } from '../src/config.js';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..');
@@ -108,6 +109,23 @@ const PRICING_SECTIONS = [
   { h: 'Frequently asked questions', items: PRICING_FAQS.map(f => `${f.q} ${f.a}`) },
 ];
 
+/* /compare/<competitor> — head-to-heads. Built from the same entry the React
+ * page renders, so the crawler and the visitor read one argument.
+ *
+ * ⚠️ Driven by LIVE_COMPARISONS, so an entry still marked live: false gets no
+ * route here AND no footer link — the two stay in step on their own. Flipping
+ * the flag without writing the copy would ship a page with an empty table, so
+ * the flag is the one switch for both. */
+const compareSections = (c) => [
+  { h: c.credit.title, items: [c.credit.body] },
+  { h: c.gaps.title, items: c.gaps.cards.map(k => `${k.title}. ${k.body}`) },
+  { h: c.table.title, items: c.table.rows.map(r => `${r.label} — DragonRestock: ${r.us.text} ${c.name}: ${r.them.text}`) },
+  { h: c.fairness.title, items: [c.fairness.body] },
+  { h: c.switchers.title, items: c.switchers.items },
+  { h: 'Frequently asked questions', items: c.faqs.map(f => `${f.q} ${f.a}`) },
+  { h: 'Sources', items: [c.sources] },
+];
+
 const meta = {
   '/': {
     title: 'DragonRestock — Never run out of stock again',
@@ -156,6 +174,22 @@ for (const [path, m] of Object.entries({
  * avoid; the alias still serves 200 for anyone (or any ad) linking to it. */
 meta['/features'] = { ...meta['/demo'], canonical: `${SITE}/demo/` };
 
+/* Comparison routes. `faqs` rides along so buildHtml can emit FAQPage
+ * structured data — these pages exist to be found by someone typing
+ * "<competitor> alternative", and the FAQ rich result is the cheapest extra
+ * surface area on the SERP for that query. */
+for (const c of LIVE_COMPARISONS) {
+  meta[`/compare/${c.slug}`] = {
+    title: c.title,
+    description: c.description,
+    eyebrow: c.eyebrow,
+    h1: `${c.h1} ${c.h1Accent}`,
+    intro: c.sub,
+    sections: compareSections(c),
+    faqs: c.faqs,
+  };
+}
+
 /* ── Build one route's HTML from the shell ───────────────────────────── */
 function buildHtml(route, m) {
   const url = m.canonical || SITE + (route === '/' ? '/' : route + '/');
@@ -170,6 +204,18 @@ function buildHtml(route, m) {
     `<meta property="og:title" content="${esc(title)}" />`,
     `<meta property="og:description" content="${esc(desc)}" />`,
     `<meta name="twitter:card" content="summary_large_image" />`,
+    /* FAQPage schema, on the routes that carry an FAQ. JSON.stringify does the
+       escaping; the word-count guard below strips <script> blocks, so this
+       cannot pad a thin page into passing. */
+    ...(m.faqs?.length ? [`<script type="application/ld+json">${JSON.stringify({
+      '@context': 'https://schema.org',
+      '@type': 'FAQPage',
+      mainEntity: m.faqs.map(f => ({
+        '@type': 'Question',
+        name: f.q,
+        acceptedAnswer: { '@type': 'Answer', text: f.a },
+      })),
+    }).replace(/</g, '\\u003c')}</script>`] : []),
   ].join('\n    ');
 
   /* Mirrors the copy React renders. Replaced on mount.
@@ -186,10 +232,24 @@ function buildHtml(route, m) {
   ].filter(Boolean).join('\n        ');
 
   let html = SHELL;
-  html = html.replace(/<title>[\s\S]*?<\/title>/, `<title>${esc(title)}</title>\n    ${head}`);
-  /* The shell already carries a description meta; drop it so the per-route one
-   * added above is the only one on the page. */
-  html = html.replace(/\n?\s*<meta name="description"[^>]*\/>(?=[\s\S]*?<link rel="canonical")/, '');
+  /* Drop the shell's generic description BEFORE injecting the per-route head,
+   * not after.
+   *
+   * ⚠️ The ordering IS the fix. The previous version stripped "the description
+   * meta that has a canonical after it", which assumed the shell put its
+   * description ABOVE <title>. It doesn't — it sits directly below — so once
+   * the per-route head was injected under the title, the only description with
+   * a canonical after it was the NEW one. The regex ate the good tag and left
+   * the homepage boilerplate behind, and every route shipped an identical
+   * description: exactly the duplicate-content signal this file exists to
+   * prevent, and invisible to anything that renders JavaScript. Stripping
+   * first needs no lookahead and cannot get this wrong again. The guard at the
+   * bottom of this file now asserts the result rather than trusting the regex. */
+  html = html.replace(/\n?\s*<meta name="description"[^>]*\/>/, '');
+  /* Function replacement, not a template string: descriptions and comparison
+   * table cells are full of "$79" and "$0.05", and $-sequences are special on
+   * the right-hand side of String.replace. */
+  html = html.replace(/<title>[\s\S]*?<\/title>/, () => `<title>${esc(title)}</title>\n    ${head}`);
   html = html.replace(
     /<div id="root"><\/div>/,
     `<div id="root"><div data-prerender="1" style="max-width:44rem;margin:0 auto;padding:4rem 1.5rem;font-family:system-ui,sans-serif">\n        ${body}\n      </div></div>`
@@ -231,8 +291,38 @@ if (thin.length) {
   console.error('Add real copy to the JSX-free data module and emit it here — see src/data/restockCopy.js');
   process.exit(1);
 }
+/* ── Guard: exactly one description per route, and it must be that route's ──
+ * This defect shipped silently because a wrong description looks like no bug
+ * at all — the page renders perfectly and only the served HTML gives it away.
+ * Assert the OUTPUT rather than trusting the regex that produced it. */
+const badMeta = [];
+const seenDesc = new Map();
+for (const route of routes) {
+  const dir = route === '/' ? dist : join(dist, ...route.split('/').filter(Boolean));
+  const html = readFileSync(join(dir, 'index.html'), 'utf8');
+  const found = [...html.matchAll(/<meta name="description" content="([^"]*)"/g)].map(m => m[1]);
+  const want = esc(meta[route].description || meta['/'].description);
+  if (found.length !== 1) {
+    badMeta.push(`${route} carries ${found.length} description tags, want exactly 1`);
+  } else if (found[0] !== want) {
+    badMeta.push(`${route} description is not its own — got "${found[0].slice(0, 70)}…"`);
+  } else if (seenDesc.has(found[0]) && route !== '/features') {
+    /* /features is a deliberate duplicate of /demo and canonicals to it, so it
+       is the only route allowed to share a description with another. */
+    badMeta.push(`${route} duplicates the description on ${seenDesc.get(found[0])}`);
+  } else {
+    seenDesc.set(found[0], route);
+  }
+}
+if (badMeta.length) {
+  console.error(`postbuild: ${badMeta.length} route(s) with a broken meta description:\n  ${badMeta.join('\n  ')}`);
+  console.error('See buildHtml() — the shell description must be stripped BEFORE the per-route head is injected.');
+  process.exit(1);
+}
+
 const guarded = routes.filter(r => !EXEMPT(r)).length;
 console.log(
   `postbuild: prerendered ${n} routes (title + description + canonical + OG + content); ` +
-  `${guarded} ad/SEO routes all >= ${MIN_WORDS} words, ${n - guarded} exempt (legal/support)`,
+  `${guarded} ad/SEO routes all >= ${MIN_WORDS} words, ${n - guarded} exempt (legal/support); ` +
+  `every route carries its own meta description`,
 );
